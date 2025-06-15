@@ -279,6 +279,50 @@ export const applyOngoingEffects = (creatures, difficulty = 'medium', currentTur
           return effect;
         }
         
+        // CRITICAL FIX: Handle effects with applyFunction (like Scrypto Surge, Engine Overclock)
+        if (effect.applyFunction && typeof effect.applyFunction === 'function') {
+          const turnsActive = currentTurn - (effect.startTurn || 0) + 1;
+          const appliedEffect = effect.applyFunction(
+            updatedCreature, 
+            updatedCreature, // Target is self for ongoing effects
+            turnsActive
+          );
+          
+          // Apply damage from this turn
+          if (appliedEffect.damage && appliedEffect.damage > 0) {
+            totalDamage += appliedEffect.damage;
+          }
+          
+          // Apply healing from this turn
+          if (appliedEffect.selfHeal && appliedEffect.selfHeal > 0) {
+            totalHealing += appliedEffect.selfHeal;
+          }
+          
+          // Apply stat changes from this turn
+          if (appliedEffect.statChanges && appliedEffect.statChanges.target) {
+            Object.entries(appliedEffect.statChanges.target).forEach(([stat, value]) => {
+              currentStatMods[stat] = (currentStatMods[stat] || 0) + value;
+            });
+          }
+          
+          // Track caster healing for drain effects
+          if (appliedEffect.selfHeal && effect.casterId) {
+            const currentCasterHealing = casterHealingMap.get(effect.casterId) || 0;
+            casterHealingMap.set(effect.casterId, currentCasterHealing + appliedEffect.selfHeal);
+            console.log(`Tracking drain self-heal: ${appliedEffect.selfHeal} for caster ${effect.casterId}`);
+          }
+          
+          // Update effect duration
+          const updatedEffect = { ...effect, duration: effect.duration - 1 };
+          
+          if (updatedEffect.duration > 0) {
+            return updatedEffect;
+          } else {
+            console.log(`${effect.name} effect has expired on ${updatedCreature.species_name}`);
+            return null;
+          }
+        }
+        
         // Process timed effects (like Charge and Echo) with turn progression
         const processedEffect = processTimedEffect(effect, currentTurn, effect.startTurn || 0);
         
@@ -763,58 +807,93 @@ export const applyTool = (creature, tool, difficulty = 'medium', currentTurn = 0
     };
   }
   
-  // Scale effects by power multiplier (with caps)
-  const scaledToolEffect = {
-    ...toolEffect,
-    statChanges: toolEffect.statChanges ? 
-      Object.entries(toolEffect.statChanges).reduce((acc, [stat, value]) => {
-        // Cap stat changes to prevent extreme values
-        const cappedValue = Math.min(Math.abs(value), 10) * Math.sign(value);
-        acc[stat] = Math.round(cappedValue * Math.min(basePowerMultiplier, 1.5));
-        return acc;
-      }, {}) : {},
-    healthChange: toolEffect.healthChange ? 
-      Math.round(Math.min(toolEffect.healthChange * basePowerMultiplier, 50)) : 0, // Cap healing
-    healthOverTime: toolEffect.healthOverTime ? 
-      Math.round(toolEffect.healthOverTime * basePowerMultiplier) : 0,
-    duration: toolEffect.duration || 1,
-    applyEachTurn: toolEffect.applyEachTurn || false
-  };
-  
-  // Apply stat changes immediately for visual feedback
-  if (scaledToolEffect.statChanges && typeof scaledToolEffect.statChanges === 'object') {
-    Object.entries(scaledToolEffect.statChanges).forEach(([stat, value]) => {
-      if (creatureClone.battleStats[stat] !== undefined) {
-        creatureClone.battleStats[stat] = Math.max(0, creatureClone.battleStats[stat] + value);
-      }
-    });
-  }
-  
-  // Apply immediate healing (first turn bonus)
-  if (scaledToolEffect.healthChange && scaledToolEffect.healthChange > 0) {
-    const oldHealth = creatureClone.currentHealth;
-    creatureClone.currentHealth = Math.min(
-      creatureClone.currentHealth + scaledToolEffect.healthChange,
-      creatureClone.battleStats.maxHealth
-    );
+  // CRITICAL FIX: Apply the tool effect immediately if it has an applyFunction
+  let immediateEffects = {};
+  if (toolEffect.applyFunction && typeof toolEffect.applyFunction === 'function') {
+    immediateEffects = toolEffect.applyFunction(creatureClone, 1); // Turn 1
     
-    const actualHealing = creatureClone.currentHealth - oldHealth;
-    console.log(`${tool.name} healed ${creatureClone.species_name} for ${actualHealing} health (initial)`);
-  }
-  
-  // Apply first tick of health over time immediately
-  if (scaledToolEffect.healthOverTime && scaledToolEffect.healthOverTime !== 0 && scaledToolEffect.duration > 0) {
-    const oldHealth = creatureClone.currentHealth;
-    creatureClone.currentHealth = Math.min(
-      Math.max(0, creatureClone.currentHealth + scaledToolEffect.healthOverTime),
-      creatureClone.battleStats.maxHealth
-    );
-    scaledToolEffect.actualHealthChange = creatureClone.currentHealth - oldHealth;
-    console.log(`Applied first tick of health change: ${scaledToolEffect.healthOverTime}`);
+    // Apply immediate stat changes
+    if (immediateEffects.statChanges) {
+      Object.entries(immediateEffects.statChanges).forEach(([stat, value]) => {
+        const scaledValue = Math.round(value * basePowerMultiplier);
+        if (creatureClone.battleStats[stat] !== undefined) {
+          creatureClone.battleStats[stat] = Math.max(0, creatureClone.battleStats[stat] + scaledValue);
+          console.log(`Tool ${tool.name} applied ${stat} ${scaledValue > 0 ? '+' : ''}${scaledValue}`);
+        }
+      });
+    }
+    
+    // Apply immediate healing
+    if (immediateEffects.healthOverTime && immediateEffects.healthOverTime > 0) {
+      const healAmount = Math.round(immediateEffects.healthOverTime * basePowerMultiplier);
+      const oldHealth = creatureClone.currentHealth;
+      creatureClone.currentHealth = Math.min(
+        creatureClone.currentHealth + healAmount,
+        creatureClone.battleStats.maxHealth
+      );
+      console.log(`${tool.name} healed ${creatureClone.species_name} for ${creatureClone.currentHealth - oldHealth} health`);
+    }
+    
+    // Apply energy gain
+    if (immediateEffects.energyGain && immediateEffects.energyGain > 0) {
+      // This would need to be handled by the calling function
+      console.log(`${tool.name} grants ${immediateEffects.energyGain} energy (handle in calling function)`);
+    }
+  } else {
+    // Fallback for tools without applyFunction
+    // Scale effects by power multiplier (with caps)
+    const scaledToolEffect = {
+      ...toolEffect,
+      statChanges: toolEffect.statChanges ? 
+        Object.entries(toolEffect.statChanges).reduce((acc, [stat, value]) => {
+          // Cap stat changes to prevent extreme values
+          const cappedValue = Math.min(Math.abs(value), 10) * Math.sign(value);
+          acc[stat] = Math.round(cappedValue * Math.min(basePowerMultiplier, 1.5));
+          return acc;
+        }, {}) : {},
+      healthChange: toolEffect.healthChange ? 
+        Math.round(Math.min(toolEffect.healthChange * basePowerMultiplier, 50)) : 0, // Cap healing
+      healthOverTime: toolEffect.healthOverTime ? 
+        Math.round(toolEffect.healthOverTime * basePowerMultiplier) : 0,
+      duration: toolEffect.duration || 1,
+      applyEachTurn: toolEffect.applyEachTurn || false
+    };
+    
+    // Apply stat changes immediately for visual feedback
+    if (scaledToolEffect.statChanges && typeof scaledToolEffect.statChanges === 'object') {
+      Object.entries(scaledToolEffect.statChanges).forEach(([stat, value]) => {
+        if (creatureClone.battleStats[stat] !== undefined) {
+          creatureClone.battleStats[stat] = Math.max(0, creatureClone.battleStats[stat] + value);
+        }
+      });
+    }
+    
+    // Apply immediate healing (first turn bonus)
+    if (scaledToolEffect.healthChange && scaledToolEffect.healthChange > 0) {
+      const oldHealth = creatureClone.currentHealth;
+      creatureClone.currentHealth = Math.min(
+        creatureClone.currentHealth + scaledToolEffect.healthChange,
+        creatureClone.battleStats.maxHealth
+      );
+      
+      const actualHealing = creatureClone.currentHealth - oldHealth;
+      console.log(`${tool.name} healed ${creatureClone.species_name} for ${actualHealing} health (initial)`);
+    }
+    
+    // Apply first tick of health over time immediately
+    if (scaledToolEffect.healthOverTime && scaledToolEffect.healthOverTime !== 0 && scaledToolEffect.duration > 0) {
+      const oldHealth = creatureClone.currentHealth;
+      creatureClone.currentHealth = Math.min(
+        Math.max(0, creatureClone.currentHealth + scaledToolEffect.healthOverTime),
+        creatureClone.battleStats.maxHealth
+      );
+      scaledToolEffect.actualHealthChange = creatureClone.currentHealth - oldHealth;
+      console.log(`Applied first tick of health change: ${scaledToolEffect.healthOverTime}`);
+    }
   }
   
   // Add active effect with better tracking
-  if (scaledToolEffect.duration > 0) {
+  if (toolEffect.duration > 0) {
     const powerLevel = basePowerMultiplier >= 1.3 ? 'strong' :
                      basePowerMultiplier >= 1.1 ? 'normal' : 'weak';
     
@@ -824,14 +903,21 @@ export const applyTool = (creature, tool, difficulty = 'medium', currentTurn = 0
       icon: getToolIcon(tool.tool_effect),
       type: tool.tool_type || "enhancement",
       description: getEffectDescription(tool.tool_effect || "enhancement", powerLevel),
-      duration: scaledToolEffect.duration,
-      statModifications: scaledToolEffect.statChanges || {},
-      statChanges: scaledToolEffect.statChanges || {}, // Store for per-turn application
-      healthOverTime: scaledToolEffect.healthOverTime || 0,
+      duration: toolEffect.duration,
+      statModifications: immediateEffects.statChanges ? 
+        Object.entries(immediateEffects.statChanges).reduce((acc, [stat, value]) => {
+          acc[stat] = Math.round(value * basePowerMultiplier);
+          return acc;
+        }, {}) : (toolEffect.statChanges || {}),
+      statChanges: immediateEffects.statChanges || toolEffect.statChanges || {}, // Store for per-turn application
+      healthOverTime: immediateEffects.healthOverTime ? 
+        Math.round(immediateEffects.healthOverTime * basePowerMultiplier) : 
+        (toolEffect.healthOverTime || 0),
       powerLevel: powerLevel,
       startTurn: currentTurn,
       effectType: tool.tool_effect,
-      applyEachTurn: scaledToolEffect.applyEachTurn || false
+      applyEachTurn: toolEffect.applyEachTurn || false,
+      applyFunction: toolEffect.applyFunction // Store the apply function
     };
     
     // Add special properties for specific effect types
@@ -858,10 +944,11 @@ export const applyTool = (creature, tool, difficulty = 'medium', currentTurn = 0
       };
       
       // For echo effects with stat changes, calculate base values
-      if (scaledToolEffect.statChanges) {
+      if (immediateEffects.statChanges || toolEffect.statChanges) {
         activeEffect.echoEffect.statBase = {};
-        Object.entries(scaledToolEffect.statChanges).forEach(([stat, value]) => {
-          activeEffect.echoEffect.statBase[stat] = value;
+        const statChanges = immediateEffects.statChanges || toolEffect.statChanges;
+        Object.entries(statChanges).forEach(([stat, value]) => {
+          activeEffect.echoEffect.statBase[stat] = Math.round(value * basePowerMultiplier);
         });
       }
     }
@@ -877,7 +964,7 @@ export const applyTool = (creature, tool, difficulty = 'medium', currentTurn = 0
   
   return {
     updatedCreature: creatureClone,
-    toolEffect: scaledToolEffect
+    toolEffect: toolEffect
   };
 };
 
@@ -921,10 +1008,10 @@ export const applySpell = (caster, target, spell, difficulty = 'medium', current
   let isCritical = false;
   
   // CRITICAL FIX: Handle INSTANT spells (duration === 0)
-  if (spellEffectConfig.duration === 0) {
+  if (spellEffectConfig.duration === 0 || spellEffectConfig.isInstantExecution) {
     console.log(`Processing INSTANT spell effect`);
     
-    // Calculate instant damage
+    // Handle instant damage
     if (spellEffectConfig.damage && spellEffectConfig.damage > 0) {
       let baseDamage = spellEffectConfig.damage;
       
@@ -957,7 +1044,7 @@ export const applySpell = (caster, target, spell, difficulty = 'medium', current
       console.log(`  Health: ${healthBefore} → ${targetClone.currentHealth}`);
       console.log(`  Actual damage dealt: ${totalDamageDealt}`);
     }
-    // Handle instant healing
+    // Handle instant healing (Cerberus Chain)
     else if (spellEffectConfig.healing && spellEffectConfig.healing > 0) {
       const baseHealing = spellEffectConfig.healing;
       const scaledHealing = Math.round(baseHealing * basePowerMultiplier);
@@ -970,11 +1057,45 @@ export const applySpell = (caster, target, spell, difficulty = 'medium', current
       totalHealingDone = targetClone.currentHealth - healthBefore;
       
       console.log(`Instant healing: ${healthBefore} → ${targetClone.currentHealth} (+${totalHealingDone})`);
+      
+      // Apply stat changes if present (Cerberus Chain grants defenses)
+      if (spellEffectConfig.statChanges) {
+        Object.entries(spellEffectConfig.statChanges).forEach(([stat, value]) => {
+          const scaledValue = Math.round(value * basePowerMultiplier);
+          if (targetClone.battleStats[stat] !== undefined) {
+            targetClone.battleStats[stat] = Math.max(0, targetClone.battleStats[stat] + scaledValue);
+            console.log(`Applied instant stat change: ${stat} ${scaledValue > 0 ? '+' : ''}${scaledValue}`);
+          }
+        });
+      }
+      
+      // Create active effect for Cerberus Chain's ongoing benefits
+      if (spellEffectConfig.duration > 0 || spellEffectConfig.healthOverTime) {
+        const activeEffect = {
+          id: Date.now() + Math.random(),
+          name: `${spell.name} Effect`,
+          icon: getSpellIcon(spell.spell_effect),
+          type: spell.spell_type || "magic",
+          description: `${spell.name} ongoing effect`,
+          duration: spellEffectConfig.duration || 3,
+          statModifications: spellEffectConfig.statChanges || {},
+          healthOverTime: spellEffectConfig.healthOverTime ? 
+            Math.round(spellEffectConfig.healthOverTime * basePowerMultiplier) : 0,
+          startTurn: currentTurn,
+          effectType: spell.spell_effect,
+          applyEachTurn: true
+        };
+        
+        targetClone.activeEffects = [...(targetClone.activeEffects || []), activeEffect];
+      }
     }
   }
   // Handle DURATION spells (damage/healing over time)
   else {
     console.log(`Processing DURATION spell effect (${spellEffectConfig.duration} turns)`);
+    
+    // CRITICAL FIX: Apply first tick properly for duration spells
+    // This includes spells like Scrypto Surge, Engine Overclock
     
     // Apply first tick of damage immediately
     if (spellEffectConfig.damageOverTime && spellEffectConfig.damageOverTime > 0) {
@@ -986,7 +1107,7 @@ export const applySpell = (caster, target, spell, difficulty = 'medium', current
       console.log(`First tick damage: ${tickDamage} (${healthBefore} → ${targetClone.currentHealth})`);
     }
     
-    // Apply first tick of healing
+    // Apply first tick of healing to target
     if (spellEffectConfig.healingOverTime && spellEffectConfig.healingOverTime > 0) {
       const tickHealing = Math.round(spellEffectConfig.healingOverTime * basePowerMultiplier);
       const healthBefore = targetClone.currentHealth;
@@ -999,7 +1120,7 @@ export const applySpell = (caster, target, spell, difficulty = 'medium', current
       console.log(`First tick healing: ${tickHealing} (+${totalHealingDone})`);
     }
     
-    // Apply first tick of self-healing to caster
+    // Apply first tick of self-healing to caster (for drain spells like Scrypto Surge)
     if (spellEffectConfig.selfHealOverTime && spellEffectConfig.selfHealOverTime > 0) {
       const tickHeal = Math.round(spellEffectConfig.selfHealOverTime * basePowerMultiplier);
       const healthBefore = casterClone.currentHealth;
@@ -1011,13 +1132,24 @@ export const applySpell = (caster, target, spell, difficulty = 'medium', current
       console.log(`Caster self-heal: ${tickHeal} (${healthBefore} → ${casterClone.currentHealth})`);
     }
     
-    // Apply stat changes
+    // Apply stat changes (immediate for some spells)
     if (spellEffectConfig.statChanges) {
       Object.entries(spellEffectConfig.statChanges).forEach(([stat, value]) => {
         const scaledValue = Math.round(value * basePowerMultiplier);
         if (targetClone.battleStats[stat] !== undefined) {
           targetClone.battleStats[stat] = Math.max(0, targetClone.battleStats[stat] + scaledValue);
           console.log(`Applied stat change: ${stat} ${scaledValue > 0 ? '+' : ''}${scaledValue}`);
+        }
+      });
+    }
+    
+    // Apply self stat changes to caster
+    if (spellEffectConfig.selfStatChanges) {
+      Object.entries(spellEffectConfig.selfStatChanges).forEach(([stat, value]) => {
+        const scaledValue = Math.round(value * basePowerMultiplier);
+        if (casterClone.battleStats[stat] !== undefined) {
+          casterClone.battleStats[stat] = Math.max(0, casterClone.battleStats[stat] + scaledValue);
+          console.log(`Applied caster stat change: ${stat} ${scaledValue > 0 ? '+' : ''}${scaledValue}`);
         }
       });
     }
@@ -1044,7 +1176,8 @@ export const applySpell = (caster, target, spell, difficulty = 'medium', current
       casterId: caster.id,
       startTurn: currentTurn,
       effectType: spell.spell_effect,
-      applyEachTurn: true
+      applyEachTurn: true,
+      applyFunction: spellEffectConfig.applyFunction // Store the apply function for special effects
     };
     
     // Add special properties for Charge effects
@@ -1084,7 +1217,7 @@ export const applySpell = (caster, target, spell, difficulty = 'medium', current
     
     targetClone.activeEffects = [...(targetClone.activeEffects || []), activeEffect];
     
-    // Add self-effect to caster if applicable
+    // Add self-effect to caster if applicable (for drain spells)
     if (spellEffectConfig.selfStatChanges || spellEffectConfig.selfHealOverTime) {
       const casterEffect = {
         ...activeEffect,
@@ -1095,7 +1228,11 @@ export const applySpell = (caster, target, spell, difficulty = 'medium', current
           Object.entries(spellEffectConfig.selfStatChanges).reduce((acc, [stat, value]) => {
             acc[stat] = Math.round(value * basePowerMultiplier);
             return acc;
-          }, {}) : {}
+          }, {}) : {},
+        selfHealOverTime: spellEffectConfig.selfHealOverTime ? 
+          Math.round(spellEffectConfig.selfHealOverTime * basePowerMultiplier) : 0,
+        healingOverTime: 0, // Caster doesn't get target healing
+        damageOverTime: 0 // Caster doesn't get damage
       };
       
       casterClone.activeEffects = [...(casterClone.activeEffects || []), casterEffect];
