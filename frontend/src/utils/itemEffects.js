@@ -19,12 +19,21 @@ const TOOL_DEFINITIONS = {
       
       return {
         statChanges: {
-          energyCost: Math.round(-1 * echoMultiplier) // Reduce energy costs
+          energyCost: Math.round(-1 * echoMultiplier) || -1 // Reduce energy costs (min -1)
         },
-        energyGain: Math.round(2 * echoMultiplier), // Gain energy per turn
-        healthOverTime: Math.round(2 * echoMultiplier), // Heal HP per turn
+        energyGain: Math.max(1, Math.round(2 * echoMultiplier)), // Gain energy per turn (min 1)
+        healthOverTime: Math.max(1, Math.round(2 * echoMultiplier)), // Heal HP per turn (min 1)
+        damage: 0,
         logMessage: turn === 1 ? `${creature.species_name} activates Babylon Keystone for echoing energy efficiency!` : null
       };
+    },
+    echoEffect: {
+      decayRate: 0.7,
+      healingBase: 2,
+      healingDecay: 0.7,
+      statBase: {
+        energyCost: -1
+      }
     }
   },
 
@@ -44,6 +53,7 @@ const TOOL_DEFINITIONS = {
           physicalDefense: 8
         },
         healthOverTime: 5,
+        damage: 0,
         logMessage: turn === 1 ? `${creature.species_name} surges with power from Hyperscale Capacitor!` : null
       };
     }
@@ -59,16 +69,18 @@ const TOOL_DEFINITIONS = {
     imageUrl: 'https://cvxlab.net/assets/tools/ledger_lens.png',
     applyEffect: (creature, turn) => {
       // Shield: Strong defense and healing
-      const barrier = turn === 1 ? 20 : 0; // Initial barrier
+      // Apply max health bonus only on first turn to avoid stacking
+      const maxHealthBonus = turn === 1 ? 20 : 0;
       
       return {
         statChanges: {
           physicalDefense: 12,
           magicalDefense: 12,
-          maxHealth: 20
+          maxHealth: maxHealthBonus
         },
         healthOverTime: 8,
-        barrier: barrier,
+        damage: 0,
+        barrier: turn === 1 ? 20 : 0, // Initial barrier on first turn only
         logMessage: turn === 1 ? `${creature.species_name} is protected by the Ledger Lens shield!` : null
       };
     }
@@ -95,9 +107,19 @@ const TOOL_DEFINITIONS = {
           magicalDefense: Math.round(defenseBonus * 0.5)
         },
         healthOverTime: healing + finalBurst,
+        damage: 0,
         logMessage: turn === 1 ? `${creature.species_name} begins charging the Olympia Emblem!` : 
                    turn === 4 ? `Olympia Emblem releases its full power!` : null
       };
+    },
+    chargeEffect: {
+      baseValue: 5,
+      perTurnIncrease: 5,
+      finalBurst: 25,
+      healingBase: 13,
+      healingIncrease: 3,
+      targetStats: ["physicalDefense", "magicalDefense"],
+      maxTurns: 4
     }
   },
 
@@ -119,6 +141,7 @@ const TOOL_DEFINITIONS = {
           magicalDefense: -3
         },
         healthOverTime: 7,
+        damage: 0,
         logMessage: turn === 1 ? `${creature.species_name} activates Validator Core, draining defense for power!` : null
       };
     }
@@ -149,11 +172,11 @@ const SPELL_DEFINITIONS = {
       const finalDamage = Math.round(isCritical ? damage * 1.5 : damage);
       
       return {
-        damage: finalDamage,
+        damage: finalDamage, // Primary damage property
         critical: isCritical,
         armorPiercing: true,
         duration: 0,
-        logMessage: `${caster.species_name} unleashes Babylon Burst for ${finalDamage} damage${isCritical ? ' (CRITICAL!)' : ''}!`
+        logMessage: `${caster.species_name || 'Caster'} unleashes Babylon Burst for ${finalDamage} damage${isCritical ? ' (CRITICAL!)' : ''}!`
       };
     }
   },
@@ -173,7 +196,7 @@ const SPELL_DEFINITIONS = {
       const damage = Math.round(baseDamage * magicPower);
       const healing = Math.round(10 * magicPower);
       
-      // Drain effect: steal stats on first turn
+      // Drain effect: steal stats on first turn only
       const statChanges = turn === 1 ? {
         target: {
           physicalAttack: -4,
@@ -183,13 +206,15 @@ const SPELL_DEFINITIONS = {
           physicalAttack: 3,
           magicalAttack: 3
         }
-      } : null;
+      } : { target: {}, caster: {} };
       
       return {
         damage: damage,
         selfHeal: healing,
         statChanges: statChanges,
-        logMessage: `Scrypto Surge drains ${damage} HP and heals ${caster.species_name} for ${healing} HP!`
+        logMessage: turn === 1 ? 
+          `Scrypto Surge drains ${damage} HP and heals ${caster.species_name} for ${healing} HP!` :
+          `Scrypto Surge continues to drain ${damage} HP and heal ${healing} HP!`
       };
     }
   },
@@ -213,7 +238,7 @@ const SPELL_DEFINITIONS = {
       const isStunned = Math.random() < 0.20;
       
       return {
-        damage: damage,
+        damage: damage, // Primary damage property
         areaEffect: true,
         applyStun: isStunned, // Flag for battle system to apply stun
         duration: 0,
@@ -237,7 +262,7 @@ const SPELL_DEFINITIONS = {
       const instantHeal = Math.round(15 * magicPower);
       
       return {
-        healing: instantHeal,
+        healing: instantHeal, // CRITICAL: Use 'healing' not 'damage'
         duration: 3,
         statChanges: {
           physicalDefense: 8,
@@ -264,14 +289,29 @@ const SPELL_DEFINITIONS = {
       // Echo effect: starts strong, decays each turn
       const echoMultiplier = Math.pow(0.7, turn - 1); // 100%, 70%, 49%, 34%
       
+      const baseStats = {
+        initiative: 10,
+        dodgeChance: 3,
+        criticalChance: 3
+      };
+      
+      const statChanges = {
+        target: {
+          initiative: Math.round(baseStats.initiative * echoMultiplier),
+          dodgeChance: Math.round(baseStats.dodgeChance * echoMultiplier),
+          criticalChance: Math.round(baseStats.criticalChance * echoMultiplier)
+        }
+      };
+      
+      const healing = Math.round(3 * echoMultiplier);
+      
       return {
-        statChanges: {
-          speed: Math.round(5 * echoMultiplier), // Boost speed stat instead of initiative
-          dodgeChance: Math.round(3 * echoMultiplier),
-          criticalChance: Math.round(3 * echoMultiplier)
-        },
-        healthOverTime: Math.round(3 * echoMultiplier), // Regeneration
-        logMessage: turn === 1 ? `Engine Overclock boosts ${caster.species_name}'s speed and regeneration!` : null
+        statChanges: statChanges,
+        selfHeal: healing, // Regeneration for the target
+        damage: 0,
+        logMessage: turn === 1 ? 
+          `Engine Overclock boosts ${target.species_name}'s speed and regeneration!` : 
+          `Engine Overclock echoes continue (${Math.round(echoMultiplier * 100)}% power)...`
       };
     }
   }
@@ -326,7 +366,21 @@ export const getToolEffect = (tool) => {
     applyFunction: definition.applyEffect,
     element: definition.element,
     effect: definition.effect,
-    applyEachTurn: true
+    applyEachTurn: true,
+    // For tools with echo/charge effects, include special properties
+    echoEffect: definition.effect === 'echo' ? {
+      decayRate: 0.7,
+      healingBase: 5,
+      healingDecay: 0.7
+    } : undefined,
+    chargeEffect: definition.effect === 'charge' ? {
+      baseValue: 5,
+      perTurnIncrease: 5,
+      finalBurst: 20,
+      healingBase: 10,
+      healingIncrease: 3,
+      targetStats: ["physicalDefense", "magicalDefense"]
+    } : undefined
   };
 };
 
@@ -366,14 +420,33 @@ export const getSpellEffect = (spell, casterMagic = 5) => {
     };
   }
   
-  // For instant spells, execute immediately
+  // CRITICAL FIX: For Cerberus Chain and other instant effect spells
+  // Check if it's an instant effect spell (duration 0 or no duration)
   if (definition.execute && (!definition.duration || definition.duration === 0)) {
-    const result = definition.execute({ battleStats: { magic: casterMagic } }, null, null);
-    return result;
+    // Execute and return the full effect configuration
+    const executionResult = definition.execute(
+      { battleStats: { magic: casterMagic }, species_name: 'Caster' }, 
+      null, 
+      null
+    );
+    
+    // Mark this as an instant execution result
+    return {
+      ...executionResult,
+      isInstantExecution: true,
+      spellName: spellName
+    };
   }
   
-  // For duration spells, return the effect structure
-  if (definition.applyEffect) {
+  // For duration spells with applyEffect (like Scrypto Surge, Engine Overclock)
+  if (definition.applyEffect && definition.duration > 0) {
+    // Create a full effect structure for duration spells
+    const firstTickEffect = definition.applyEffect(
+      { battleStats: { magic: casterMagic }, species_name: 'Caster' },
+      { species_name: 'Target' },
+      1 // First turn
+    );
+    
     return {
       name: spellName,
       duration: definition.duration,
@@ -381,22 +454,30 @@ export const getSpellEffect = (spell, casterMagic = 5) => {
       element: definition.element,
       effect: definition.effect,
       energyCost: definition.energyCost,
-      applyEachTurn: true
+      applyEachTurn: true,
+      // Include first tick values for immediate application
+      damageOverTime: firstTickEffect.damage || 0,
+      healingOverTime: firstTickEffect.selfHeal || 0,
+      statChanges: firstTickEffect.statChanges?.target || {},
+      selfStatChanges: firstTickEffect.statChanges?.caster || {},
+      selfHealOverTime: firstTickEffect.selfHeal || 0
     };
   }
   
-  // For charge spells
+  // For charge spells (like Shardstorm)
   if (definition.chargeTime) {
     return {
       name: spellName,
       prepareEffect: { turns: definition.chargeTime },
       executeFunction: definition.execute,
-      energyCost: definition.energyCost
+      energyCost: definition.energyCost,
+      isChargeSpell: true
     };
   }
   
+  // Default fallback
   return {
-    damage: 10,
+    damage: Math.round(15 * (1 + casterMagic * 0.15)),
     duration: 0
   };
 };
@@ -484,36 +565,118 @@ export const calculateComboEffect = (comboLevel) => {
 };
 
 // Process timed effects (charge, echo, etc.)
-export const processTimedEffect = (effect, currentTurn) => {
+export const processTimedEffect = (effect, currentTurn, startTurn = 0) => {
   if (!effect) return null;
   
-  const turnsActive = currentTurn - (effect.startTurn || 0);
+  const turnsActive = currentTurn - (startTurn || 0);
   
   // Handle charge effects
-  if (effect.effectType === 'charge' || effect.effect === 'charge') {
+  if (effect.effectType === 'Charge' || effect.effectType === 'charge') {
     const chargeLevel = Math.min(turnsActive + 1, effect.maxTurns || 4);
     const chargePercent = (chargeLevel / (effect.maxTurns || 4)) * 100;
+    
+    // Calculate damage/healing/stats for this turn
+    let damageThisTurn = 0;
+    let healingThisTurn = 0;
+    let statModifications = {};
+    
+    if (effect.chargeEffect) {
+      // Damage builds up
+      if (effect.chargeEffect.damageBase) {
+        damageThisTurn = effect.chargeEffect.damageBase + 
+          (effect.chargeEffect.damageIncrease * (chargeLevel - 1));
+      }
+      
+      // Healing builds up
+      if (effect.chargeEffect.healingBase) {
+        healingThisTurn = effect.chargeEffect.healingBase + 
+          (effect.chargeEffect.healingIncrease * (chargeLevel - 1));
+      }
+      
+      // Stats build up
+      if (effect.chargeEffect.targetStats && effect.chargeEffect.baseValue) {
+        effect.chargeEffect.targetStats.forEach(stat => {
+          statModifications[stat] = effect.chargeEffect.baseValue + 
+            (effect.chargeEffect.perTurnIncrease * (chargeLevel - 1));
+        });
+      }
+      
+      // Final burst on last turn
+      if (chargeLevel >= (effect.maxTurns || 4) && effect.chargeEffect.finalBurst) {
+        damageThisTurn += effect.chargeEffect.finalBurst;
+      }
+    }
     
     return {
       ...effect,
       chargeLevel,
       chargePercent,
-      isReady: chargeLevel >= (effect.maxTurns || 4)
+      isReady: chargeLevel >= (effect.maxTurns || 4),
+      isFinalBurst: chargeLevel >= (effect.maxTurns || 4),
+      damageThisTurn,
+      healingThisTurn,
+      statModifications
     };
   }
   
   // Handle echo effects
-  if (effect.effectType === 'echo' || effect.effect === 'echo') {
-    const echoMultiplier = Math.pow(0.7, turnsActive);
+  if (effect.effectType === 'Echo' || effect.effectType === 'echo') {
+    const echoMultiplier = Math.pow(effect.decayRate || 0.7, turnsActive);
+    
+    // Calculate values for this turn
+    let damageThisTurn = 0;
+    let healingThisTurn = 0;
+    let statModifications = {};
+    
+    if (effect.echoEffect) {
+      if (effect.echoEffect.damageBase) {
+        damageThisTurn = Math.round(effect.echoEffect.damageBase * echoMultiplier);
+      }
+      
+      if (effect.echoEffect.healingBase) {
+        healingThisTurn = Math.round(effect.echoEffect.healingBase * echoMultiplier);
+      }
+      
+      if (effect.echoEffect.statBase) {
+        Object.entries(effect.echoEffect.statBase).forEach(([stat, value]) => {
+          statModifications[stat] = Math.round(value * echoMultiplier);
+        });
+      }
+    }
+    
+    // Fallback for effects without echoEffect structure
+    if (effect.damageOverTime) {
+      damageThisTurn = Math.round(effect.damageOverTime * echoMultiplier);
+    }
+    
+    if (effect.healthOverTime || effect.healingOverTime) {
+      healingThisTurn = Math.round((effect.healthOverTime || effect.healingOverTime) * echoMultiplier);
+    }
+    
+    if (effect.statModifications) {
+      Object.entries(effect.statModifications).forEach(([stat, value]) => {
+        statModifications[stat] = Math.round(value * echoMultiplier);
+      });
+    }
     
     return {
       ...effect,
       currentMultiplier: echoMultiplier,
-      effectiveness: Math.round(echoMultiplier * 100)
+      effectiveness: Math.round(echoMultiplier * 100),
+      damageThisTurn,
+      healingThisTurn,
+      healthOverTime: healingThisTurn, // For compatibility
+      statModifications
     };
   }
   
-  return effect;
+  // Default handling for standard effects
+  return {
+    ...effect,
+    damageThisTurn: effect.damageOverTime || 0,
+    healingThisTurn: effect.healingOverTime || effect.healthOverTime || 0,
+    statModifications: effect.statModifications || {}
+  };
 };
 
 // Get visual effect data (animations, particles, etc.)
