@@ -1,0 +1,160 @@
+/* src/styles/StatusEffects.css - Visual effects for status conditions */
+
+/* Stunned creature visual effect */
+.creature-card.stunned {
+  position: relative;
+  filter: grayscale(30%);
+  opacity: 0.85;
+  pointer-events: none; /* Prevent clicking stunned creatures */
+}
+
+.creature-card.stunned::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle, transparent 40%, rgba(255, 255, 0, 0.2) 100%);
+  animation: pulse-stun 1.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Status indicator overlay */
+.status-indicator {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: 20px;
+  padding: 5px 10px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  z-index: 10;
+}
+
+.status-indicator.stun-indicator {
+  background: rgba(255, 215, 0, 0.9);
+  color: #333;
+  border: 2px solid #FFD700;
+}
+
+.status-icon {
+  font-size: 20px;
+  animation: spin-slow 2s linear infinite;
+}
+
+.status-text {
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+/* Animations */
+@keyframes pulse-stun {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.6;
+  }
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Stun application animation */
+.stun-effect-animation {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100px;
+  height: 100px;
+  pointer-events: none;
+  z-index: 100;
+}
+
+.stun-stars {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  animation: expand-rotate 1s ease-out forwards;
+}
+
+.stun-star {
+  position: absolute;
+  font-size: 24px;
+  animation: star-orbit 1s ease-out forwards;
+}
+
+.stun-star:nth-child(1) { top: 0; left: 50%; transform: translateX(-50%); }
+.stun-star:nth-child(2) { top: 50%; right: 0; transform: translateY(-50%); }
+.stun-star:nth-child(3) { bottom: 0; left: 50%; transform: translateX(-50%); }
+.stun-star:nth-child(4) { top: 50%; left: 0; transform: translateY(-50%); }
+
+@keyframes expand-rotate {
+  0% {
+    transform: scale(0) rotate(0deg);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.5) rotate(180deg);
+    opacity: 0;
+  }
+}
+
+@keyframes star-orbit {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+}
+
+/* Battle log stun message */
+.battle-log-entry.stun-message {
+  background: linear-gradient(to right, rgba(255, 215, 0, 0.1), transparent);
+  border-left: 3px solid #FFD700;
+  font-weight: bold;
+}
+
+/* Disabled action buttons when stunned */
+.action-panel.creature-stunned .action-btn:not(.end-turn) {
+  opacity: 0.5;
+  cursor: not-allowed;
+  position: relative;
+}
+
+.action-panel.creature-stunned .action-btn:not(.end-turn)::after {
+  content: '💫 Stunned';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: #FFD700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+}

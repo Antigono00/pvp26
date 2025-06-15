@@ -1,0 +1,244 @@
+/* src/AttackTypeIndicators.css - Clean positioning for attack type indicators */
+
+/* Attack Type Indicators - Repositioned to bottom-right */
+.attack-type-indicator {
+  position: absolute;
+  bottom: 5px !important;
+  right: 5px !important;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: scale(0.5);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  z-index: 15;
+  pointer-events: none;
+  background: rgba(0, 0, 0, 0.8);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Show attack type on hover or when specified by class */
+.creature-card:hover .attack-type-indicator,
+.creature-card.show-attack-type .attack-type-indicator,
+.creature-card.animating .attack-type-indicator,
+.creature-card.animation-target .attack-type-indicator {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Physical attack indicator */
+.attack-type-indicator.physical {
+  background: linear-gradient(135deg, rgba(255, 80, 0, 0.9), rgba(255, 30, 0, 0.7));
+  box-shadow: 0 0 10px rgba(255, 80, 0, 0.5);
+  border-color: rgba(255, 80, 0, 0.5);
+}
+
+/* Magical attack indicator */
+.attack-type-indicator.magical {
+  background: linear-gradient(135deg, rgba(130, 80, 255, 0.9), rgba(100, 30, 255, 0.7));
+  box-shadow: 0 0 10px rgba(130, 80, 255, 0.5);
+  border-color: rgba(130, 80, 255, 0.5);
+}
+
+/* Attack type icon */
+.attack-icon {
+  font-size: 12px;
+  line-height: 1;
+  display: block;
+  filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.5));
+}
+
+/* Highlight stat based on primary attack type */
+.mini-stat.highlight {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+  box-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+  z-index: 1;
+}
+
+/* Physical attacker special styles - top border only */
+.creature-card.physical-attacker::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, rgba(255, 0, 0, 0), rgba(255, 80, 0, 0.7), rgba(255, 0, 0, 0));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.creature-card.physical-attacker.show-attack-type::before,
+.creature-card.physical-attacker.animating::before,
+.creature-card.physical-attacker.animation-target::before {
+  opacity: 1;
+}
+
+/* Magical attacker special styles - top border only */
+.creature-card.magical-attacker::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, rgba(130, 0, 255, 0), rgba(130, 80, 255, 0.7), rgba(130, 0, 255, 0));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.creature-card.magical-attacker.show-attack-type::before,
+.creature-card.magical-attacker.animating::before,
+.creature-card.magical-attacker.animation-target::before {
+  opacity: 1;
+}
+
+/* Animation-specific highlight styles */
+.creature-card.animating {
+  z-index: 50 !important;
+}
+
+.creature-card.animation-target {
+  z-index: 49 !important;
+}
+
+/* Animation type-specific styles */
+.creature-card.animating-attack {
+  box-shadow: 0 0 15px rgba(255, 80, 0, 0.6) !important;
+}
+
+.creature-card.animating-spell {
+  box-shadow: 0 0 15px rgba(130, 80, 255, 0.6) !important;
+}
+
+.creature-card.animating-tool {
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.6) !important;
+}
+
+.creature-card.animating-defend {
+  box-shadow: 0 0 15px rgba(0, 150, 255, 0.6) !important;
+}
+
+.creature-card.animating-thinking {
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.4) !important;
+}
+
+/* Target-specific animation styles */
+.creature-card.animation-target-attack {
+  box-shadow: 0 0 15px rgba(255, 0, 0, 0.6) !important;
+}
+
+.creature-card.animation-target-spell {
+  box-shadow: 0 0 15px rgba(130, 0, 255, 0.6) !important;
+}
+
+.creature-card.animation-target-tool {
+  box-shadow: 0 0 15px rgba(0, 255, 150, 0.6) !important;
+}
+
+/* Enhanced animation for critical health */
+@keyframes critical-health-alert {
+  0%, 100% { 
+    box-shadow: 0 0 5px rgba(255, 0, 0, 0.6); 
+  }
+  50% { 
+    box-shadow: 0 0 15px rgba(255, 0, 0, 0.8); 
+  }
+}
+
+.creature-card[data-health-status="critical"] {
+  animation: critical-health-alert 1.5s ease-in-out infinite;
+}
+
+/* Special indicator for selected cards */
+.creature-card.selected .attack-type-indicator {
+  opacity: 0.8 !important;
+  transform: scale(1) !important;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .attack-type-indicator {
+    width: 20px;
+    height: 20px;
+    bottom: 3px !important;
+    right: 3px !important;
+  }
+  
+  .attack-icon {
+    font-size: 10px;
+  }
+  
+  .mini-stat.highlight {
+    transform: scale(1.05);
+  }
+  
+  /* Mobile hand cards */
+  .hand-card-wrapper .attack-type-indicator {
+    width: 16px;
+    height: 16px;
+    bottom: 2px !important;
+    right: 2px !important;
+  }
+  
+  .hand-card-wrapper .attack-icon {
+    font-size: 8px;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .attack-type-indicator {
+    border-width: 3px;
+  }
+  
+  .attack-type-indicator.physical {
+    border-color: #FF5500;
+  }
+  
+  .attack-type-indicator.magical {
+    border-color: #8855FF;
+  }
+}
+
+/* Accessibility - respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .attack-type-indicator {
+    transition: none;
+  }
+  
+  .creature-card.physical-attacker::before,
+  .creature-card.magical-attacker::before {
+    transition: none;
+  }
+  
+  .creature-card[data-health-status="critical"] {
+    animation: none;
+    box-shadow: 0 0 8px rgba(255, 0, 0, 0.7);
+  }
+}
+
+/* Ensure proper stacking context */
+.creature-image-container {
+  position: relative;
+  z-index: 1;
+}
+
+.creature-card-header {
+  position: relative;
+  z-index: 2;
+}
+
+.creature-card-footer {
+  position: relative;
+  z-index: 3;
+}

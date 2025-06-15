@@ -1,0 +1,331 @@
+.pvp-matchmaking-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 500px;
+  padding: 20px;
+}
+
+.pvp-matchmaking {
+  background: rgba(15, 76, 117, 0.1);
+  border: 2px solid #0f4c75;
+  border-radius: 20px;
+  padding: 40px;
+  width: 100%;
+  max-width: 600px;
+  text-align: center;
+}
+
+.pvp-matchmaking-header {
+  margin-bottom: 30px;
+}
+
+.pvp-matchmaking-header h2 {
+  color: #3282b8;
+  margin: 0 0 10px 0;
+  font-size: 2em;
+}
+
+.pvp-queue-time {
+  font-size: 1.5em;
+  color: #bbe1fa;
+  font-weight: bold;
+}
+
+.pvp-matchmaking-content {
+  margin: 30px 0;
+}
+
+/* Search animation */
+.pvp-search-animation {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  margin: 0 auto 30px;
+}
+
+.pvp-search-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  border: 3px solid #3282b8;
+  border-radius: 50%;
+  opacity: 0;
+  animation: searchPulse 2s ease-out infinite;
+}
+
+.pvp-search-ring:nth-child(2) {
+  animation-delay: 0.5s;
+}
+
+.pvp-search-ring:nth-child(3) {
+  animation-delay: 1s;
+}
+
+@keyframes searchPulse {
+  0% {
+    transform: translate(-50%, -50%) scale(0.3);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0;
+  }
+}
+
+/* Match found animation */
+.pvp-match-found {
+  animation: matchFoundBounce 0.6s ease-out;
+}
+
+@keyframes matchFoundBounce {
+  0% { transform: scale(0.5); opacity: 0; }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.pvp-match-animation {
+  font-size: 4em;
+  margin-bottom: 20px;
+  animation: swordCross 1s ease-in-out infinite;
+}
+
+@keyframes swordCross {
+  0%, 100% { transform: rotate(-5deg); }
+  50% { transform: rotate(5deg); }
+}
+
+.pvp-match-found h3 {
+  color: #4caf50;
+  margin: 10px 0;
+  font-size: 1.8em;
+}
+
+.pvp-match-found p {
+  color: #bbe1fa;
+  font-size: 1.2em;
+}
+
+/* Queue info */
+.pvp-queue-info {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  margin: 30px 0;
+}
+
+.pvp-queue-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.pvp-queue-stat span {
+  color: #3282b8;
+  font-size: 0.9em;
+}
+
+.pvp-queue-stat strong {
+  color: #bbe1fa;
+  font-size: 1.3em;
+}
+
+/* Deck preview */
+.pvp-deck-preview {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 15px;
+  padding: 20px;
+  margin: 30px 0;
+}
+
+.pvp-deck-preview h4 {
+  color: #3282b8;
+  margin: 0 0 15px 0;
+}
+
+.pvp-deck-creatures {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.pvp-deck-creature {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 2px solid #0f4c75;
+  transition: transform 0.3s ease;
+}
+
+.pvp-deck-creature:hover {
+  transform: scale(1.1);
+}
+
+.pvp-deck-creature img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pvp-rarity-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7em;
+  font-weight: bold;
+  color: white;
+}
+
+.pvp-rarity-badge.common {
+  background: #9e9e9e;
+}
+
+.pvp-rarity-badge.rare {
+  background: #2196f3;
+}
+
+.pvp-rarity-badge.epic {
+  background: #9c27b0;
+}
+
+.pvp-rarity-badge.legendary {
+  background: #ff9800;
+}
+
+.pvp-deck-items {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.pvp-deck-item {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid #0f4c75;
+}
+
+.pvp-deck-item.tool {
+  border-color: #4caf50;
+}
+
+.pvp-deck-item.spell {
+  border-color: #e91e63;
+}
+
+.pvp-deck-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Tips */
+.pvp-matchmaking-tips {
+  margin-top: 30px;
+  padding: 15px;
+  background: rgba(50, 130, 184, 0.1);
+  border-radius: 10px;
+  border: 1px solid #3282b8;
+}
+
+.pvp-tip {
+  color: #bbe1fa;
+  font-style: italic;
+  margin: 0;
+}
+
+/* Footer */
+.pvp-matchmaking-footer {
+  margin-top: 30px;
+}
+
+.pvp-cancel-queue-button {
+  padding: 10px 30px;
+  background: rgba(244, 67, 54, 0.2);
+  color: #f44336;
+  border: 2px solid #f44336;
+  border-radius: 25px;
+  font-size: 1.1em;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.pvp-cancel-queue-button:hover {
+  background: rgba(244, 67, 54, 0.3);
+  transform: scale(1.05);
+}
+
+/* Error state */
+.pvp-matchmaking-error {
+  background: rgba(244, 67, 54, 0.1);
+  border: 2px solid #f44336;
+  border-radius: 15px;
+  padding: 30px;
+  text-align: center;
+}
+
+.pvp-matchmaking-error h3 {
+  color: #f44336;
+  margin: 0 0 15px 0;
+}
+
+.pvp-matchmaking-error p {
+  color: #bbe1fa;
+  margin: 0 0 20px 0;
+}
+
+.pvp-retry-button,
+.pvp-cancel-button {
+  padding: 10px 25px;
+  margin: 0 10px;
+  background: rgba(50, 130, 184, 0.2);
+  color: #3282b8;
+  border: 2px solid #3282b8;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.pvp-retry-button:hover,
+.pvp-cancel-button:hover {
+  background: rgba(50, 130, 184, 0.3);
+  transform: scale(1.05);
+}
+
+/* Mobile styles */
+@media (max-width: 768px) {
+  .pvp-matchmaking {
+    padding: 20px;
+  }
+  
+  .pvp-matchmaking-header h2 {
+    font-size: 1.5em;
+  }
+  
+  .pvp-queue-info {
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .pvp-deck-creatures {
+    flex-wrap: wrap;
+  }
+  
+  .pvp-deck-creature {
+    width: 50px;
+    height: 50px;
+  }
+}

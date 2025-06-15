@@ -1,0 +1,171 @@
+/* src/ActionButtonAnimations.css - Enhanced action button animations */
+
+/* Button animation effects */
+@keyframes action-button-pulse {
+  0% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.05);
+    filter: brightness(1.3);
+  }
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+}
+
+@keyframes action-button-press {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(0.95);
+  }
+  70% {
+    transform: scale(1.02);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Add glow effects to buttons */
+.action-btn::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border-radius: inherit;
+  opacity: 0;
+  z-index: -1;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.action-btn:hover:not(:disabled)::after {
+  opacity: 0.6;
+}
+
+.action-btn.deploy::after {
+  box-shadow: 0 0 15px rgba(76, 175, 80, 0.7);
+}
+
+.action-btn.attack::after {
+  box-shadow: 0 0 15px rgba(244, 67, 54, 0.7);
+}
+
+.action-btn.special::after {
+  box-shadow: 0 0 15px rgba(255, 152, 0, 0.7);
+}
+
+.action-btn.defend::after {
+  box-shadow: 0 0 15px rgba(0, 188, 212, 0.7);
+}
+
+.action-btn.end-turn::after {
+  box-shadow: 0 0 15px rgba(96, 125, 139, 0.7);
+}
+
+/* Animate buttons when clicked */
+.action-btn-animate {
+  animation: action-button-press 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+  position: relative;
+}
+
+.action-btn-animate::after {
+  opacity: 0.8;
+}
+
+/* Enhanced button icon animations */
+.action-btn .btn-icon {
+  transition: transform 0.3s ease;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.action-btn:hover:not(:disabled) .btn-icon {
+  transform: scale(1.2);
+}
+
+.action-btn-animate .btn-icon {
+  animation: action-button-pulse 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+/* Button feedback animations based on type */
+.action-btn.deploy.action-btn-animate {
+  background: linear-gradient(135deg, #66BB6A, #4CAF50);
+  box-shadow: 0 0 20px rgba(76, 175, 80, 0.5);
+}
+
+.action-btn.attack.action-btn-animate {
+  background: linear-gradient(135deg, #EF5350, #F44336);
+  box-shadow: 0 0 20px rgba(244, 67, 54, 0.5);
+}
+
+.action-btn.special.action-btn-animate {
+  background: linear-gradient(135deg, #FFB74D, #FF9800);
+  box-shadow: 0 0 20px rgba(255, 152, 0, 0.5);
+}
+
+.action-btn.defend.action-btn-animate {
+  background: linear-gradient(135deg, #4DD0E1, #00BCD4);
+  box-shadow: 0 0 20px rgba(0, 188, 212, 0.5);
+}
+
+.action-btn.end-turn.action-btn-animate {
+  background: linear-gradient(135deg, #78909C, #607D8B);
+  box-shadow: 0 0 20px rgba(96, 125, 139, 0.5);
+}
+
+/* Highlight buttons based on available actions */
+.action-btn.attack:not(:disabled) {
+  animation: action-button-pulse 4s ease-in-out infinite;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .action-btn {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+  
+  .action-btn .btn-icon {
+    margin-right: 3px;
+    font-size: 14px;
+  }
+  
+  .action-btn:hover:not(:disabled) .btn-icon {
+    transform: scale(1.1);
+  }
+}
+
+/* Accessibility - respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .action-btn::after {
+    transition: none;
+  }
+  
+  .action-btn .btn-icon {
+    transition: none;
+  }
+  
+  .action-btn:hover:not(:disabled) .btn-icon {
+    transform: none;
+  }
+  
+  .action-btn-animate {
+    animation: none;
+  }
+  
+  .action-btn-animate .btn-icon {
+    animation: none;
+  }
+  
+  .action-btn.attack:not(:disabled) {
+    animation: none;
+  }
+}

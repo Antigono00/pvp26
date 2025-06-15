@@ -1,0 +1,14 @@
+// src/context/RadixConnect.scss
+.radix-connect-container {
+  display: inline-block;
+  --radix-connect-button-width: 180px;
+  --radix-connect-button-height: 42px;
+  --radix-connect-button-border-radius: 8px;
+}
+
+// Media queries for responsiveness
+@media (max-width: 768px) {
+  .radix-connect-container {
+    --radix-connect-button-width: 150px;
+  }
+}

@@ -1,0 +1,4396 @@
+/* src/battle.css - COMPLETE DESKTOP SIDEBAR LAYOUT WITH MOBILE FIXES AND ALL UI IMPROVEMENTS */
+
+/* Add critical direct style injection to force hiding wallet buttons */
+.battle-game-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999999; /* EXTREMELY high z-index to be above everything */
+  overflow-y: auto; /* FIXED: Allow scrolling when window is small */
+  overflow-x: hidden; /* Prevent horizontal scrolling */
+  isolation: isolate;
+}
+
+/* Additional style to directly inject into the document style and override the MobileRadixWrapper */
+.battle-game-overlay::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: transparent;
+  z-index: 999999; /* Higher than the wallet button's z-index */
+  pointer-events: none;
+}
+
+/* Hide the actual connect button explicitly by applying styles directly based on its position */
+body:has(.battle-game-overlay) *[style*="position: fixed"][style*="top: 10px"][style*="right: 60px"],
+body:has(.battle-game-overlay) *[style*="position:fixed"][style*="top:10px"][style*="right:60px"],
+body:has(.battle-game-overlay) button[style*="position: fixed"][style*="top: 10px"][style*="right: 60px"],
+body:has(.battle-game-overlay) button[style*="position:fixed"][style*="top:10px"][style*="right:60px"] {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  z-index: -1 !important;
+  position: absolute !important; 
+  transform: scale(0) !important;
+}
+
+/* Main battle container - ENHANCED for sidebar layout with minimum height - IMPROVED: Scrollable content */
+.battle-game {
+  width: 100%;
+  max-width: 1400px; /* Increased for sidebars */
+  height: auto; /* CHANGED: from 95vh to auto to enable proper scrolling */
+  min-height: 600px; /* FIXED: Minimum height to ensure content visibility */
+  margin: 10px auto;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f1419 100%);
+  border-radius: 12px;
+  overflow: visible; /* CHANGED: from hidden to visible to allow content to overflow */
+  color: #e6e6e6;
+  font-family: 'Orbitron', sans-serif;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7), 0 0 20px rgba(76, 175, 80, 0.1);
+  position: relative;
+  z-index: inherit; /* Inherit the high z-index from parent */
+  border: 2px solid rgba(76, 175, 80, 0.3);
+  isolation: isolate; /* Create proper stacking context */
+}
+
+/* DESKTOP LAYOUT WITH SIDEBARS */
+@media (min-width: 769px) {
+  .battle-content-wrapper {
+    display: flex;
+    flex: 1;
+    position: relative;
+    overflow: visible; /* Changed from hidden to visible to allow cards to expand */
+    height: auto; /* CHANGED: From fixed height to auto for better scrolling */
+    min-height: 600px; /* Minimum height to ensure content has space */
+    isolation: isolate; /* Create proper stacking context */
+  }
+  
+  /* Main battle area in center */
+  .battle-main-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    height: 100%; /* Full height to ensure proper spacing */
+    overflow: visible; /* Changed to allow for proper card expansion */
+  }
+  
+  /* Battlefield container takes all available height except hand */
+  .battlefield-container {
+    flex: 1; /* Take remaining space */
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: visible; /* Changed to allow for proper card visibility */
+  }
+  
+  /* Battlefield with sidebars */
+  .battlefield {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    height: 100%;
+    overflow: visible; /* Changed to allow for proper sidebar visibility */
+  }
+  
+  /* FIXED: Enemy field (top half) with constrained height */
+  .battlefield-enemy {
+    flex: none; /* FIXED: Don't flex grow */
+    height: 200px; /* FIXED: Fixed height for enemy field */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 15px;
+    border-bottom: 2px solid rgba(244, 67, 54, 0.3);
+    background: linear-gradient(180deg, rgba(244, 67, 54, 0.05) 0%, transparent 100%);
+    overflow-y: auto; /* Allow scrolling if too many creatures */
+    position: relative;
+    z-index: 5; /* Lower than sidebars and center divider */
+  }
+  
+  /* Center divider container */
+  .battlefield-center-container {
+    position: relative;
+    z-index: 20; /* Increased to appear above sidebars */
+    height: 40px; /* Fixed height for center divider */
+  }
+  
+  /* Center divider */
+  .battlefield-center {
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    flex-shrink: 0;
+  }
+  
+  /* Player field with sidebars */
+  .battlefield-player-section {
+    flex: 1;
+    display: flex;
+    position: relative;
+    overflow: visible; /* Changed to allow for proper card visibility */
+  }
+  
+  /* Left sidebar - Battle Log */
+  .battle-log-sidebar {
+    width: 220px; /* Slightly wider for better visibility */
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.85));
+    border-right: 2px solid rgba(255, 193, 7, 0.3);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    max-height: 100%; /* Ensure it doesn't go beyond player section */
+    position: relative;
+    z-index: 30; /* Increased to appear above center divider */
+    overflow: visible; /* Allow content to be visible */
+  }
+  
+  /* Player battlefield in center */
+  .battlefield-player {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 15px;
+    background: linear-gradient(0deg, rgba(76, 175, 80, 0.05) 0%, transparent 100%);
+    overflow-y: auto; /* Allow scrolling if needed */
+    position: relative;
+    z-index: 5; /* Lower than sidebars */
+  }
+  
+  /* Right sidebar - Action Panel - IMPROVED: Reduced size */
+  .action-panel-sidebar {
+    width: 200px; /* REDUCED: from 220px to 200px */
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.85));
+    border-left: 2px solid rgba(76, 175, 80, 0.3);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    padding: 10px; /* REDUCED: from 15px to 10px */
+    max-height: 100%; /* Ensure it doesn't go beyond player section */
+    overflow-y: auto;
+    position: relative;
+    z-index: 30; /* Increased to appear above center divider */
+  }
+  
+  /* Player hand at bottom */
+  .player-hand {
+    height: 130px; /* Fixed height for hand - reduced from previous 140px */
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.9));
+    border-top: 2px solid rgba(76, 175, 80, 0.3);
+    z-index: 100;
+    transition: none;
+    overflow: visible !important; /* FIXED: Force cards to be able to expand outside container */
+    margin-top: auto; /* Push to bottom of container */
+    flex-shrink: 0; /* Prevent shrinking */
+    position: relative; /* Needed for z-index to work properly */
+  }
+  
+  /* Hand always shows cards */
+  .hand-cards {
+    display: flex;
+    gap: 12px;
+    padding: 10px 20px;
+    overflow-x: auto;
+    overflow-y: visible !important; /* Force visibility of expanded cards */
+    height: 100%;
+    align-items: center;
+    position: relative; /* Needed for z-index to work properly */
+  }
+  
+  /* Desktop hand cards */
+  .hand-card-wrapper {
+    position: relative;
+    flex-shrink: 0;
+    width: 100px;
+    height: 115px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: visible !important; /* FIXED: Allow overflow for cards */
+  }
+  
+  /* Hover effect - better scaling without cutoff */
+  .hand-card-wrapper:hover {
+    z-index: 1000;
+    overflow: visible !important; /* FIXED: Ensure overflow is visible */
+  }
+  
+  .hand-card-wrapper:hover .creature-card,
+  .hand-card-wrapper.selected .creature-card {
+    transform: translateY(-50px) scale(1.2); /* More aggressive upward transform */
+    z-index: 1001;
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.8), 0 0 0 3px rgba(76, 175, 80, 0.5);
+    visibility: visible !important; /* FIXED: Ensure visibility */
+  }
+  
+  /* Selected card stays elevated */
+  .hand-card-wrapper.selected .creature-card {
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.8), 0 0 0 3px rgba(76, 175, 80, 0.8);
+    overflow: visible !important; /* FIXED: Ensure overflow is visible */
+  }
+}
+
+/* Only force lower z-index when modal is actually open, but keep overflow visible */
+.hand-cards-behind-modal .hand-card-wrapper:hover,
+.hand-cards-behind-modal .hand-card-wrapper.selected {
+  z-index: 50 !important; /* Force lower z-index when modal is open */
+  overflow: visible !important; /* FIXED: Ensure overflow is visible */
+}
+
+/* Ensure hand cards in modal context are still visible */
+.hand-cards-behind-modal .hand-card-wrapper:hover .creature-card,
+.hand-cards-behind-modal .hand-card-wrapper.selected .creature-card {
+  visibility: visible !important; /* FIXED: Ensure visibility */
+  overflow: visible !important; /* FIXED: Ensure overflow is visible */
+}
+
+/* Difficulty-based styling */
+.battle-game[data-difficulty="easy"] {
+  border-color: rgba(76, 175, 80, 0.4);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7), 0 0 20px rgba(76, 175, 80, 0.15);
+}
+
+.battle-game[data-difficulty="medium"] {
+  border-color: rgba(255, 193, 7, 0.4);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7), 0 0 20px rgba(255, 193, 7, 0.15);
+}
+
+.battle-game[data-difficulty="hard"] {
+  border-color: rgba(255, 152, 0, 0.4);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7), 0 0 20px rgba(255, 152, 0, 0.15);
+}
+
+.battle-game[data-difficulty="expert"] {
+  border-color: rgba(244, 67, 54, 0.4);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7), 0 0 20px rgba(244, 67, 54, 0.15);
+  animation: expert-difficulty-pulse 3s ease-in-out infinite;
+}
+
+@keyframes expert-difficulty-pulse {
+  0%, 100% { 
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7), 0 0 20px rgba(244, 67, 54, 0.15);
+  }
+  50% { 
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7), 0 0 30px rgba(244, 67, 54, 0.25);
+  }
+}
+
+/* Difficulty selector styles */
+.difficulty-selector {
+  padding: 20px;
+  text-align: center;
+  overflow-y: auto;
+  max-height: 90vh;
+  z-index: 10000;
+  position: relative;
+}
+
+.difficulty-selector h2 {
+  color: #4CAF50;
+  margin-bottom: 15px;
+  font-size: 28px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  background: linear-gradient(45deg, #4CAF50, #66BB6A);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.difficulty-description {
+  margin-bottom: 20px;
+  padding: 15px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  border-left: 4px solid #4CAF50;
+}
+
+.difficulty-description p {
+  margin: 5px 0;
+  font-size: 14px;
+  color: #ccc;
+}
+
+.difficulty-warning {
+  background: rgba(244, 67, 54, 0.1);
+  border: 1px solid rgba(244, 67, 54, 0.3);
+  color: #ffcdd2;
+  padding: 10px;
+  border-radius: 6px;
+  margin-top: 10px;
+  font-size: 12px;
+}
+
+.difficulty-options {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.difficulty-option {
+  width: 200px;
+  border-radius: 10px;
+  overflow: hidden;
+  background-color: #2a2a3e;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 2px solid transparent;
+  position: relative;
+}
+
+.difficulty-option::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.6s;
+}
+
+.difficulty-option:hover::before {
+  transform: translateX(100%);
+}
+
+.difficulty-option.selected {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+}
+
+.difficulty-option:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+}
+
+.difficulty-header {
+  padding: 12px;
+  font-weight: bold;
+  text-align: center;
+  color: #000;
+  font-size: 16px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.difficulty-content {
+  padding: 15px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.difficulty-option[data-difficulty="expert"] .difficulty-header {
+  background: linear-gradient(45deg, #FF5722, #D32F2F);
+  animation: expert-header-glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes expert-header-glow {
+  0% { box-shadow: inset 0 0 10px rgba(255, 87, 34, 0.3); }
+  100% { box-shadow: inset 0 0 20px rgba(255, 87, 34, 0.6); }
+}
+
+.difficulty-option[data-difficulty="hard"] .difficulty-header {
+  background: linear-gradient(45deg, #FF9800, #F57C00);
+}
+
+.difficulty-option[data-difficulty="medium"] .difficulty-header {
+  background: linear-gradient(45deg, #FFC107, #FF8F00);
+}
+
+.difficulty-option[data-difficulty="easy"] .difficulty-header {
+  background: linear-gradient(45deg, #4CAF50, #388E3C);
+}
+
+.battle-controls {
+  margin-top: 25px;
+  margin-bottom: 15px;
+}
+
+.start-battle-btn {
+  padding: 12px 30px;
+  font-size: 18px;
+  font-weight: bold;
+  border: none;
+  border-radius: 25px;
+  color: #000;
+  cursor: pointer;
+  font-family: 'Orbitron', sans-serif;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  position: relative;
+  overflow: hidden;
+}
+
+.start-battle-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s;
+}
+
+.start-battle-btn:hover::before {
+  left: 100%;
+}
+
+.start-battle-btn:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+.start-battle-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #666 !important;
+}
+
+/* ===== SIMPLIFIED BATTLE HEADER STYLES ===== */
+.battle-header {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.7));
+  border-bottom: 2px solid rgba(76, 175, 80, 0.5);
+  padding: 8px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  overflow: visible; /* Changed from hidden to visible */
+  max-height: 70px; /* Slightly reduced */
+  min-height: 50px;
+  flex-shrink: 0;
+  z-index: 1000;
+}
+
+.battle-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #4CAF50, transparent);
+}
+
+/* Ultra-simplified desktop header */
+.battle-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto; /* Don't let it grow */
+}
+
+/* Turn counter - more compact */
+.turn-counter {
+  display: flex;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.turn-label {
+  font-size: 10px;
+  margin-right: 4px;
+  color: #aaa;
+}
+
+.turn-number {
+  font-size: 14px;
+  font-weight: bold;
+  color: #fff;
+}
+
+/* Difficulty badge */
+.difficulty-indicator {
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-weight: bold;
+  color: #000;
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+/* Active player - more compact */
+.active-player-indicator {
+  font-size: 12px;
+  padding: 3px 6px;
+}
+
+.player-active {
+  color: #4CAF50;
+  border: 1px solid #4CAF50;
+  background: rgba(76, 175, 80, 0.1);
+  animation: player-turn-pulse 2s ease-in-out infinite;
+}
+
+.enemy-active {
+  color: #F44336;
+  border: 1px solid #F44336;
+  background: rgba(244, 67, 54, 0.1);
+  animation: enemy-turn-pulse 2s ease-in-out infinite;
+}
+
+@keyframes player-turn-pulse {
+  0%, 100% { box-shadow: 0 0 5px rgba(76, 175, 80, 0.3); }
+  50% { box-shadow: 0 0 15px rgba(76, 175, 80, 0.6); }
+}
+
+@keyframes enemy-turn-pulse {
+  0%, 100% { box-shadow: 0 0 5px rgba(244, 67, 54, 0.3); }
+  50% { box-shadow: 0 0 15px rgba(244, 67, 54, 0.6); }
+}
+
+/* ===== SIMPLIFIED SYNERGY DISPLAY ===== */
+/* Center section with simplified synergies */
+.field-synergies {
+  flex: 0 1 auto; /* Allow shrinking */
+  max-width: 300px; /* Limit width */
+  overflow: visible; /* Allow hover content */
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  position: relative;
+}
+
+/* Only show total synergy values by default */
+.synergy-display {
+  position: relative;
+  padding: 3px 8px;
+  background: rgba(76, 175, 80, 0.1);
+  border: 1px solid rgba(76, 175, 80, 0.3);
+  border-radius: 4px;
+  cursor: pointer;
+  min-width: 80px;
+  text-align: center;
+}
+
+.synergy-display.enemy {
+  background: rgba(244, 67, 54, 0.1);
+  border: 1px solid rgba(244, 67, 54, 0.3);
+}
+
+.synergy-label {
+  font-size: 9px;
+  color: #aaa;
+  text-transform: uppercase;
+  display: block;
+}
+
+.synergy-total {
+  font-size: 14px;
+  font-weight: bold;
+  color: #4CAF50;
+}
+
+.synergy-display.enemy .synergy-total {
+  color: #F44336;
+}
+
+/* Synergy details on hover */
+.synergy-details {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 5px;
+  background: rgba(0, 0, 0, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  padding: 8px;
+  z-index: 1000;
+  width: 180px;
+  text-align: left;
+}
+
+.synergy-display:hover .synergy-details {
+  display: block;
+}
+
+.synergy-details-title {
+  font-size: 10px;
+  color: #aaa;
+  margin-bottom: 5px;
+  text-transform: uppercase;
+}
+
+.synergy-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 3px;
+  font-size: 11px;
+}
+
+.synergy-item:last-child {
+  margin-bottom: 0;
+}
+
+.synergy-item-name {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.synergy-item-icon {
+  font-size: 12px;
+}
+
+.synergy-item-value {
+  font-weight: bold;
+  color: #4CAF50;
+}
+
+.synergy-display.enemy .synergy-item-value {
+  color: #F44336;
+}
+
+/* ===== ENERGY DISPLAYS ===== */
+/* Right side energy displays */
+.energy-displays {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  flex: 0 0 auto; /* Don't let it grow */
+}
+
+.player-energy-section,
+.enemy-energy-section {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.player-energy, .enemy-energy {
+  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 40px;
+}
+
+.energy-label {
+  font-size: 9px;
+  color: #999;
+  margin-bottom: 2px;
+}
+
+.energy-value {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.energy-bar-container {
+  width: 60px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 2px;
+}
+
+.energy-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #4CAF50, #66BB6A);
+  border-radius: 2px;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.energy-bar.enemy {
+  background: linear-gradient(90deg, #F44336, #EF5350);
+}
+
+/* Battlefield background styles */
+.battlefield {
+  background: 
+    radial-gradient(circle at 20% 20%, rgba(76, 175, 80, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(244, 67, 54, 0.05) 0%, transparent 50%),
+    linear-gradient(to bottom, #1a1a2e, #121220);
+}
+
+.battlefield::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 20px,
+      rgba(255, 255, 255, 0.01) 20px,
+      rgba(255, 255, 255, 0.01) 40px
+    );
+  pointer-events: none;
+}
+
+.battlefield-enemy.large-field {
+  min-height: 160px;
+  padding: 10px 5px;
+}
+
+.battlefield-center::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 100px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #4CAF50, transparent);
+  transform: translate(-50%, -50%);
+}
+
+/* Creature slots and cards */
+.creature-slot {
+  width: 130px;
+  height: 190px;
+  border-radius: 10px;
+  border: 2px dashed rgba(255, 255, 255, 0.2);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 5px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+  transition: all 0.3s ease;
+}
+
+.creature-slot:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+}
+
+.creature-slot.empty::after {
+  content: 'Empty Slot';
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 12px;
+  text-align: center;
+}
+
+/* Creature Card Styles */
+.creature-card {
+  width: 130px;
+  height: 190px;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.6));
+  border-radius: 10px;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  border: 2px solid transparent;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  backdrop-filter: blur(5px);
+  will-change: transform;
+  z-index: 1;
+}
+
+.creature-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.creature-card:hover::before {
+  opacity: 1;
+}
+
+.creature-card:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+}
+
+.creature-card.active {
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
+}
+
+.creature-card.selected {
+  border-color: #4CAF50;
+  box-shadow: 0 0 20px rgba(76, 175, 80, 0.6);
+  transform: translateY(-5px) scale(1.03);
+  z-index: 10;
+}
+
+.creature-card.target {
+  z-index: 9;
+}
+
+.creature-card.animating {
+  z-index: 50 !important;
+}
+
+.creature-card.animation-target {
+  z-index: 49 !important;
+}
+
+.creature-card.defending {
+  border-color: #2196F3;
+  box-shadow: 0 0 20px rgba(33, 150, 243, 0.6);
+}
+
+.creature-card.defending::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(33, 150, 243, 0.15);
+  pointer-events: none;
+  animation: defend-pulse 2s ease-in-out infinite;
+}
+
+@keyframes defend-pulse {
+  0%, 100% { opacity: 0.15; }
+  50% { opacity: 0.3; }
+}
+
+.creature-card.enemy {
+  border-color: #444;
+}
+
+.creature-card.enemy.selected {
+  border-color: #F44336;
+  box-shadow: 0 0 20px rgba(244, 67, 54, 0.6);
+}
+
+/* Rarity-based card styling */
+.creature-card[data-rarity="Legendary"] {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(0, 0, 0, 0.8));
+  border-color: rgba(255, 215, 0, 0.4);
+}
+
+.creature-card[data-rarity="Epic"] {
+  background: linear-gradient(135deg, rgba(156, 39, 176, 0.2), rgba(0, 0, 0, 0.8));
+  border-color: rgba(156, 39, 176, 0.4);
+}
+
+.creature-card[data-rarity="Rare"] {
+  background: linear-gradient(135deg, rgba(33, 150, 243, 0.2), rgba(0, 0, 0, 0.8));
+  border-color: rgba(33, 150, 243, 0.4);
+}
+
+/* ===== UPDATED CREATURE CARD STYLES FOR CLEAN LAYOUT ===== */
+
+/* Updated creature card header to accommodate synergy display */
+.creature-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  background: rgba(0, 0, 0, 0.7);
+  font-size: 11px;
+  font-weight: bold;
+  position: relative;
+  z-index: 2;
+  height: 24px;
+}
+
+.creature-card-header .header-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Remove synergy from creature cards */
+.creature-card .synergy-level {
+  display: none !important;
+}
+
+.creature-card .synergy-indicator {
+  display: none !important;
+}
+
+/* Remove the has-synergies styling from creature cards */
+.creature-card.has-synergies {
+  box-shadow: none !important;
+}
+
+.creature-card.has-synergies .creature-card-header {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+/* Creature form styling */
+.creature-card-header .creature-form {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2px 5px;
+  border-radius: 8px;
+  font-size: 10px;
+}
+
+.creature-name {
+  font-weight: bold;
+  font-size: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 70px;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+}
+
+.creature-form {
+  font-size: 8px;
+  padding: 1px 4px;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 3px;
+  color: #ccc;
+}
+
+.creature-image-container {
+  position: relative;
+  width: 100%;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.5);
+  flex-grow: 1;
+}
+
+.creature-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 20%;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.creature-card:hover .creature-image {
+  transform: scale(1.08);
+}
+
+.creature-image.image-fallback {
+  filter: grayscale(0.3);
+}
+
+/* Updated attack type indicator positioning */
+.attack-type-indicator {
+  position: absolute;
+  bottom: 5px !important; /* Changed from top to bottom */
+  right: 5px !important;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: scale(0.5);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  z-index: 15; /* Higher z-index to ensure visibility */
+  pointer-events: none;
+  background: rgba(0, 0, 0, 0.8); /* Add background for better visibility */
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Show attack type on hover or when specified by class */
+.creature-card:hover .attack-type-indicator,
+.creature-card.show-attack-type .attack-type-indicator,
+.creature-card.animating .attack-type-indicator,
+.creature-card.animation-target .attack-type-indicator {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Physical attack indicator */
+.attack-type-indicator.physical {
+  background: linear-gradient(135deg, rgba(255, 80, 0, 0.9), rgba(255, 30, 0, 0.7));
+  box-shadow: 0 0 10px rgba(255, 80, 0, 0.5);
+  border-color: rgba(255, 80, 0, 0.5);
+}
+
+/* Magical attack indicator */
+.attack-type-indicator.magical {
+  background: linear-gradient(135deg, rgba(130, 80, 255, 0.9), rgba(100, 30, 255, 0.7));
+  box-shadow: 0 0 10px rgba(130, 80, 255, 0.5);
+  border-color: rgba(130, 80, 255, 0.5);
+}
+
+.creature-card-footer {
+  height: 52px;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.9));
+  padding: 3px 4px;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  justify-content: space-between;
+  position: relative;
+  z-index: 3;
+}
+
+.creature-card > * {
+  position: relative;
+  z-index: inherit;
+}
+
+.health-bar-container {
+  height: 10px;
+  background: linear-gradient(90deg, rgba(255, 0, 0, 0.3), rgba(255, 0, 0, 0.2));
+  margin: 2px 3px;
+  border-radius: 5px;
+  position: relative;
+  overflow: hidden;
+  z-index: 5;
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.health-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #4CAF50, #66BB6A);
+  border-radius: 5px;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 6px rgba(76, 175, 80, 0.4);
+  will-change: width;
+}
+
+.health-bar[data-health="critical"] {
+  background: linear-gradient(90deg, #F44336, #EF5350);
+  box-shadow: 0 0 6px rgba(244, 67, 54, 0.4);
+  animation: critical-health-pulse 1s ease-in-out infinite alternate;
+}
+
+.health-bar[data-health="low"] {
+  background: linear-gradient(90deg, #FF9800, #FFB74D);
+  box-shadow: 0 0 6px rgba(255, 152, 0, 0.4);
+}
+
+@keyframes critical-health-pulse {
+  0% { opacity: 1; }
+  100% { opacity: 0.7; }
+}
+
+.health-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 9px;
+  color: white;
+  text-shadow: 0 0 3px black, 0 0 5px black;
+  font-weight: bold;
+  pointer-events: none;
+  line-height: 1;
+}
+
+.mini-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 3px;
+  padding: 3px 3px;
+  height: calc(100% - 16px);
+  align-items: center;
+  position: relative;
+  z-index: 4;
+}
+
+.mini-stat {
+  font-size: 8px;
+  padding: 2px 2px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #bbb;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  min-width: 0;
+  height: 15px;
+  gap: 2px;
+}
+
+.mini-stat:nth-child(1) { grid-column: 1; grid-row: 1; }
+.mini-stat:nth-child(2) { grid-column: 2; grid-row: 1; }
+.mini-stat:nth-child(3) { grid-column: 3; grid-row: 1; }
+.mini-stat:nth-child(4) { grid-column: 1; grid-row: 2; }
+.mini-stat:nth-child(5) { grid-column: 2; grid-row: 2; }
+
+.mini-stat.primary {
+  background: rgba(76, 175, 80, 0.25);
+  border-color: rgba(76, 175, 80, 0.4);
+  color: #e8f5e9;
+  font-weight: 600;
+  box-shadow: 0 0 3px rgba(76, 175, 80, 0.2);
+  z-index: 1;
+}
+
+.mini-stat.special-slot {
+  grid-column: 3;
+  grid-row: 2;
+  background: rgba(255, 215, 0, 0.08);
+  border-color: rgba(255, 215, 0, 0.2);
+}
+
+.mini-stat .stat-icon {
+  font-size: 10px;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.5));
+  flex-shrink: 0;
+}
+
+/* IMPORTANT: Remove stat modifications and ensure white stat values */
+.mini-stat .stat-mod {
+  display: none !important;
+}
+
+.mini-stat .stat-value {
+  font-weight: 600;
+  font-size: 9px;
+  color: #fff !important; /* Force white color */
+}
+
+/* Remove the defense-active span */
+.defense-active {
+  display: none !important;
+}
+
+.specialty-indicator,
+.rarity-indicator {
+  font-weight: bold;
+  color: #FFD700;
+  text-shadow: 0 0 3px rgba(255, 215, 0, 0.5);
+  font-size: 8px;
+}
+
+/* Status effects positioning to avoid overlap */
+.status-effects {
+  position: absolute;
+  top: 30px; /* Below header */
+  left: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 12;
+  max-height: calc(100% - 80px); /* Prevent overflow */
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Fix tooltip visibility and positioning */
+.status-effects {
+  position: relative;
+  z-index: 10; /* Ensure effects container has proper z-index */
+}
+
+.status-effect {
+  position: relative;
+  cursor: help;
+  z-index: 1;
+}
+
+.effect-tooltip {
+  position: absolute;
+  bottom: calc(100% + 10px); /* Position above the icon */
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.95);
+  color: white;
+  padding: 12px;
+  border-radius: 8px;
+  min-width: 220px;
+  max-width: 300px;
+  z-index: 9999; /* Very high z-index to ensure visibility */
+  pointer-events: none;
+  margin-bottom: 5px;
+  font-size: 13px;
+  line-height: 1.5;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  white-space: normal;
+}
+
+/* Ensure the tooltip appears on top of everything */
+.creature-card {
+  position: relative;
+}
+
+.creature-card .effect-tooltip {
+  z-index: 10000 !important;
+}
+
+/* Style the tooltip content */
+.tooltip-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.tooltip-title {
+  font-weight: bold;
+  color: #fff;
+  font-size: 14px;
+}
+
+.tooltip-type {
+  font-size: 11px;
+  color: #aaa;
+  text-transform: uppercase;
+}
+
+.tooltip-description {
+  margin-bottom: 8px;
+  color: #ddd;
+  font-style: italic;
+}
+
+.tooltip-stats {
+  margin: 8px 0;
+  padding: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.tooltip-stat {
+  padding: 3px 0;
+  display: flex;
+  justify-content: space-between;
+}
+
+.tooltip-stat.positive {
+  color: #66bb6a;
+}
+
+.tooltip-stat.negative {
+  color: #ef5350;
+}
+
+.tooltip-duration {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 12px;
+  color: #ffd54f;
+  text-align: center;
+}
+
+/* Mobile-specific status effects adjustments */
+@media (max-width: 768px) {
+  .status-effects {
+    top: 22px; /* Adjusted position */
+    left: 3px;
+    gap: 2px;
+    overflow: visible !important;
+    /* Prevent affecting card size */
+    width: 0;
+    height: 0;
+  }
+  
+  /* Fix for mobile tooltips */
+  .effect-tooltip {
+    position: fixed;
+    bottom: auto;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+}
+
+.status-icon {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 10px;
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
+  animation: status-icon-pulse 2s ease-in-out infinite;
+}
+
+@keyframes status-icon-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.status-icon.buff {
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.8), rgba(76, 175, 80, 0.6));
+  border-color: rgba(76, 175, 80, 0.5);
+}
+
+.status-icon.debuff {
+  background: linear-gradient(135deg, rgba(244, 67, 54, 0.8), rgba(244, 67, 54, 0.6));
+  border-color: rgba(244, 67, 54, 0.5);
+}
+
+.defending-shield {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  font-size: 14px;
+  z-index: 2;
+  color: #2196F3;
+  filter: drop-shadow(0 0 4px rgba(33, 150, 243, 0.6));
+  animation: shield-glow 2s ease-in-out infinite;
+}
+
+@keyframes shield-glow {
+  0%, 100% { filter: drop-shadow(0 0 4px rgba(33, 150, 243, 0.6)); }
+  50% { filter: drop-shadow(0 0 8px rgba(33, 150, 243, 0.9)); }
+}
+
+/* Single defense effect indicator */
+.defense-effect-indicator {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: rgba(33, 150, 243, 0.9);
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  z-index: 10;
+  animation: defense-pulse 2s ease-in-out infinite;
+  position: relative;
+}
+
+.defense-effect-indicator .defense-icon {
+  position: relative;
+}
+
+.defense-effect-indicator .defense-duration {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  font-size: 10px;
+  font-weight: bold;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+@keyframes defense-pulse {
+  0%, 100% { 
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  50% { 
+    transform: scale(1.1);
+    opacity: 1;
+  }
+}
+
+/* Remove duplicate defense indicators */
+.creature-card.has-defense-effect {
+  box-shadow: 0 0 15px rgba(33, 150, 243, 0.5);
+}
+
+.creature-card.has-defense-effect::after {
+  display: none !important;
+}
+
+/* Hide extra defense icons in mini-stats */
+.mini-stat.defense-active::after {
+  display: none !important;
+}
+
+/* Improved stat changes overlay */
+.stat-changes-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.95);
+  border: 2px solid #FFD700;
+  border-radius: 8px;
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  z-index: 20;
+  animation: fade-in 0.2s ease;
+  max-width: 90%;
+  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.stat-change {
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.stat-change.positive {
+  color: #4CAF50;
+}
+
+.stat-change.negative {
+  color: #F44336;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+.detailed-stats-overlay {
+  position: absolute;
+  bottom: 5px;
+  left: 5px;
+  right: 5px;
+  background: rgba(0, 0, 0, 0.9);
+  border-radius: 4px;
+  padding: 4px;
+  font-size: 9px;
+  color: #ccc;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(5px);
+}
+
+.detailed-stats-overlay .stat-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 2px;
+}
+
+.detailed-stats-overlay .stat-row:last-child {
+  margin-bottom: 0;
+}
+
+/* Compact creature cards for crowded battlefields */
+.battlefield-enemy.large-field .creature-card,
+.battlefield-player.compact-view .creature-card {
+  width: 110px;
+  height: 170px;
+}
+
+.battlefield-enemy.large-field .creature-image-container,
+.battlefield-player.compact-view .creature-image-container {
+  height: 98px;
+}
+
+.battlefield-enemy.large-field .creature-card-footer,
+.battlefield-player.compact-view .creature-card-footer {
+  height: 48px;
+}
+
+/* DESKTOP PLAYER HAND STYLES */
+@media (min-width: 769px) {
+  .player-hand .hand-title {
+    display: none; /* Hide the title completely for cleaner look */
+  }
+  
+  /* Remove hover expansion arrows on desktop */
+  .player-hand .hand-title::after {
+    display: none;
+  }
+  
+  /* Remove hover expansion arrows on desktop */
+  .hand-title::after {
+    display: none;
+  }
+  
+  .hand-cards::-webkit-scrollbar {
+    height: 6px;
+  }
+  
+  .hand-cards::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+  }
+  
+  .hand-cards::-webkit-scrollbar-thumb {
+    background: rgba(76, 175, 80, 0.5);
+    border-radius: 3px;
+  }
+  
+  .hand-cards::-webkit-scrollbar-thumb:hover {
+    background: rgba(76, 175, 80, 0.7);
+  }
+  
+  /* Hand card sizes - Properly sized */
+  .hand-card-wrapper .creature-card {
+    width: 100px;
+    height: 115px;
+    overflow: visible !important; /* FIXED: Allow overflow for cards */
+  }
+  
+  .hand-card-wrapper .creature-image-container {
+    height: 60px;
+  }
+  
+  .hand-card-wrapper .creature-card-footer {
+    height: 39px; /* Increased to show all stats */
+    padding: 2px;
+  }
+  
+  .hand-card-wrapper .health-bar-container {
+    height: 6px;
+    margin: 1px 2px;
+  }
+  
+  .hand-card-wrapper .health-text {
+    font-size: 7px;
+  }
+  
+  .hand-card-wrapper .mini-stats {
+    gap: 1px;
+    padding: 2px;
+    height: calc(100% - 10px); /* Leave space for health bar */
+  }
+  
+  .hand-card-wrapper .mini-stat {
+    font-size: 7px;
+    height: 12px;
+    padding: 1px 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+  }
+  
+  .hand-card-wrapper .mini-stat .stat-icon {
+    font-size: 8px; /* Increased from 7px */
+  }
+  
+  .hand-card-wrapper .mini-stat .stat-value {
+    font-size: 7px; /* Increased from 6px */
+  }
+  
+  /* Adjust header for hand cards */
+  .hand-card-wrapper .creature-card-header {
+    height: 16px;
+    padding: 2px 4px;
+  }
+  
+  .hand-card-wrapper .creature-name {
+    font-size: 8px;
+    max-width: 60px;
+  }
+  
+  .hand-card-wrapper .creature-form {
+    font-size: 7px;
+    padding: 0 3px;
+  }
+}
+
+/* DESKTOP ACTION PANEL SIDEBAR - IMPROVED: SMALLER SIZE */
+@media (min-width: 769px) {
+  .action-panel-sidebar .action-info {
+    padding: 8px 0; /* REDUCED: from 10px to 8px */
+    text-align: center;
+    color: #aaa;
+    font-style: italic;
+    font-size: 11px; /* REDUCED: from 12px to 11px */
+  }
+  
+  .action-panel-sidebar .selected-info {
+    margin-bottom: 12px; /* REDUCED: from 15px to 12px */
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px; /* REDUCED: from 8px to 6px */
+    padding: 6px; /* REDUCED: from 8px to 6px */
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 5px;
+    border-left: 3px solid #4CAF50;
+  }
+  
+  .action-panel-sidebar .selection-summary {
+    width: 100%;
+  }
+  
+  .action-panel-sidebar .selected-creature,
+  .action-panel-sidebar .target-creature {
+    display: block;
+    background: rgba(76, 175, 80, 0.2);
+    padding: 3px 6px; /* REDUCED: from 4px 8px to 3px 6px */
+    border-radius: 3px;
+    font-size: 11px; /* REDUCED: from 12px to 11px */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 3px; /* REDUCED: from 4px to 3px */
+  }
+  
+  .action-panel-sidebar .action-arrow {
+    display: block;
+    text-align: center;
+    color: #4CAF50;
+    margin: 3px 0; /* REDUCED: from 4px to 3px */
+    font-weight: bold;
+  }
+  
+  .action-panel-sidebar .action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px; /* REDUCED: from 10px to 8px */
+  }
+  
+  .action-panel-sidebar .action-btn {
+    width: 100%;
+    padding: 8px 12px; /* REDUCED: from 10px 15px to 8px 12px */
+    font-size: 11px; /* REDUCED: from 12px to 11px */
+    border-radius: 6px; /* REDUCED: from 8px to 6px */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px; /* REDUCED: from 5px to 4px */
+  }
+  
+  .action-panel-sidebar .action-btn .btn-icon {
+    font-size: 13px; /* REDUCED: from 14px to 13px */
+  }
+  
+  /* Creature stats summary - IMPROVED: Smaller size */
+  .action-panel-sidebar .creature-stats-summary {
+    margin-top: 3px; /* ADDED: Add small top margin */
+    margin-bottom: 6px; /* ADDED: Add bottom margin */
+  }
+  
+  .action-panel-sidebar .summary-stats {
+    display: flex;
+    justify-content: space-between;
+    padding: 3px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+  }
+  
+  .action-panel-sidebar .summary-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 10px; /* REDUCED: from previous size */
+  }
+  
+  .action-panel-sidebar .summary-stat .stat-icon {
+    font-size: 11px; /* REDUCED: from previous size */
+    margin-bottom: 2px;
+  }
+  
+  .action-panel-sidebar .summary-stat .stat-value {
+    font-weight: bold;
+    font-size: 11px; /* REDUCED: from previous size */
+  }
+  
+  /* Scrollbar styling for action panel */
+  .action-panel-sidebar::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .action-panel-sidebar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+  }
+  
+  .action-panel-sidebar::-webkit-scrollbar-thumb {
+    background: rgba(76, 175, 80, 0.5);
+    border-radius: 3px;
+  }
+  
+  .action-panel-sidebar::-webkit-scrollbar-thumb:hover {
+    background: rgba(76, 175, 80, 0.7);
+  }
+}
+
+/* DESKTOP BATTLE LOG SIDEBAR */
+@media (min-width: 769px) {
+  .battle-log-sidebar {
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden; /* Ensure no overflow */
+  }
+  
+  .battle-log-sidebar .log-title {
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #FFC107;
+    font-size: 13px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0; /* Don't shrink */
+    padding: 5px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+  }
+  
+  /* Remove expansion arrow on desktop */
+  .battle-log-sidebar .log-title::after {
+    display: none;
+  }
+  
+  /* FIXED: Battle Log in sidebar with fixed height */
+  .battle-log-sidebar .log-entries {
+    font-size: 11px;
+    line-height: 1.5;
+    flex: 1; /* Take remaining space */
+    height: 250px; /* FIXED: Set fixed height */
+    overflow-y: auto; /* Scroll content */
+    overflow-x: hidden;
+    padding: 5px; /* Add padding around entries */
+    background: rgba(0, 0, 0, 0.2); /* Slightly highlight the entries area */
+    border-radius: 4px;
+    margin-bottom: 5px; /* Space at bottom */
+  }
+  
+  .battle-log-sidebar .log-entry {
+    margin-bottom: 5px;
+    padding: 3px 5px; /* More padding for better readability */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 3px; /* Rounded corners for entries */
+    background: rgba(0, 0, 0, 0.1); /* Subtle background for each entry */
+  }
+  
+  .battle-log-sidebar .log-entries::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .battle-log-sidebar .log-entries::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+  }
+  
+  .battle-log-sidebar .log-entries::-webkit-scrollbar-thumb {
+    background: rgba(255, 193, 7, 0.5);
+    border-radius: 3px;
+  }
+  
+  .battle-log-sidebar .log-entries::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 193, 7, 0.7);
+  }
+  
+  /* Add scroll to bottom button for battle log */
+  .battle-log-sidebar .scroll-to-bottom {
+    text-align: center;
+    font-size: 10px;
+    cursor: pointer;
+    padding: 2px;
+    color: #FFC107;
+    background: rgba(0,0,0,0.2);
+    border-radius: 0 0 4px 4px;
+  }
+}
+
+/* Action button colors with gradients */
+.action-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 5px;
+  background: linear-gradient(135deg, #333, #444);
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.action-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.action-btn:hover::before {
+  left: 100%;
+}
+
+.action-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.action-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: #555;
+}
+
+.action-btn.deploy { 
+  background: linear-gradient(135deg, #4CAF50, #66BB6A);
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+}
+
+.action-btn.attack { 
+  background: linear-gradient(135deg, #F44336, #EF5350);
+  box-shadow: 0 2px 8px rgba(244, 67, 54, 0.3);
+}
+
+.action-btn.special { 
+  background: linear-gradient(135deg, #FF9800, #FFB74D);
+  box-shadow: 0 2px 8px rgba(255, 152, 0, 0.3);
+}
+
+.action-btn.defend { 
+  background: linear-gradient(135deg, #00BCD4, #4DD0E1);
+  box-shadow: 0 2px 8px rgba(0, 188, 212, 0.3);
+}
+
+.action-btn.end-turn { 
+  background: linear-gradient(135deg, #607D8B, #78909C);
+  box-shadow: 0 2px 8px rgba(96, 125, 139, 0.3);
+}
+
+/* Log entry color coding */
+.log-entry.damage { color: #EF5350; }
+.log-entry.healing { color: #66BB6A; }
+.log-entry.critical { 
+  color: #FFD54F; 
+  font-weight: bold;
+  text-shadow: 0 0 4px rgba(255, 213, 79, 0.5);
+}
+.log-entry.deploy { color: #4CAF50; }
+.log-entry.defend { color: #00BCD4; }
+.log-entry.defeat { 
+  color: #F44336; 
+  font-weight: bold;
+}
+.log-entry.victory { 
+  color: #4CAF50; 
+  font-weight: bold;
+  text-shadow: 0 0 4px rgba(76, 175, 80, 0.5);
+}
+
+.turn-indicator {
+  color: #aaa;
+  margin-right: 6px;
+  font-weight: bold;
+  font-size: 10px;
+}
+
+.log-message {
+  color: #ddd;
+}
+
+.log-count {
+  color: #FFC107;
+  font-size: 10px;
+  margin-left: 5px;
+}
+
+/* New entry indicator styling */
+.new-entry-indicator {
+  background: #4CAF50;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 9px;
+  animation: pulse-new 1s ease-in-out infinite;
+  cursor: pointer;
+}
+
+@keyframes pulse-new {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* Battle result styles */
+.battle-result {
+  padding: 20px;
+  text-align: center;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.95), rgba(0, 0, 0, 0.85));
+  border-radius: 10px;
+  margin: 10px;
+  max-height: 85vh;
+  overflow-y: auto;
+  position: relative;
+  min-height: 400px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.result-header {
+  padding: 15px;
+  border-radius: 10px 10px 0 0;
+  margin: -20px -20px 20px -20px;
+  position: relative;
+  overflow: hidden;
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.result-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transform: translateX(-100%);
+  animation: result-shine 2s ease-in-out infinite;
+}
+
+@keyframes result-shine {
+  0% { transform: translateX(-100%); }
+  50% { transform: translateX(100%); }
+  100% { transform: translateX(100%); }
+}
+
+.result-header h2 {
+  margin: 0;
+  color: white;
+  font-size: 32px;
+  text-shadow: 0 3px 6px rgba(0, 0, 0, 0.5);
+  font-weight: bold;
+  position: relative;
+  z-index: 2;
+}
+
+.result-content {
+  margin-bottom: 30px;
+  position: relative;
+  width: 100%;
+}
+
+.result-message {
+  font-size: 18px;
+  margin-bottom: 25px;
+  color: #ddd;
+  line-height: 1.5;
+}
+
+.battle-stats {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.2));
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 25px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  min-height: 200px;
+  position: relative;
+}
+
+.battle-stats h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+  padding-bottom: 8px;
+  color: #fff;
+  font-size: 18px;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.stat-item {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.1));
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: transform 0.2s ease;
+  min-height: 70px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.stat-item:hover {
+  transform: translateY(-2px);
+}
+
+.stat-label {
+  font-size: 13px;
+  color: #aaa;
+  margin-bottom: 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: bold;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.rewards-section {
+  margin-top: 25px;
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.15), rgba(76, 175, 80, 0.05));
+  padding: 20px;
+  border-radius: 10px;
+  border-left: 4px solid #4CAF50;
+  border: 1px solid rgba(76, 175, 80, 0.3);
+  min-height: 150px;
+  position: relative;
+}
+
+.rewards-section h3 {
+  color: #4CAF50;
+  margin-top: 0;
+  font-size: 18px;
+  margin-bottom: 20px;
+}
+
+.reward-summary {
+  display: flex;
+  justify-content: space-around;
+  gap: 15px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  min-height: 80px;
+  align-items: center;
+}
+
+.reward-item {
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.2), rgba(76, 175, 80, 0.1));
+  border-radius: 10px;
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(76, 175, 80, 0.3);
+  min-width: 120px;
+  transition: transform 0.3s ease;
+  height: 60px;
+  justify-content: center;
+}
+
+.reward-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+}
+
+.reward-icon {
+  font-size: 24px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reward-details {
+  text-align: center;
+}
+
+.reward-amount {
+  font-size: 20px;
+  font-weight: bold;
+  color: #4CAF50;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  line-height: 1;
+}
+
+.reward-type {
+  font-size: 12px;
+  color: #ccc;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 2px;
+}
+
+.reward-items {
+  margin-top: 20px;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.1));
+  border-radius: 10px;
+  padding: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  min-height: 100px;
+}
+
+.reward-items h4 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #FFD700;
+  font-size: 16px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.reward-item-card {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.2));
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+  min-height: 50px;
+  height: 50px;
+}
+
+.reward-item-card:hover {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  transform: translateX(5px);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.reward-item-card .item-icon {
+  font-size: 20px;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  flex-shrink: 0;
+}
+
+.item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.item-name {
+  font-weight: bold;
+  font-size: 14px;
+  margin-bottom: 2px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.item-rarity {
+  font-size: 11px;
+  opacity: 0.8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.performance-bonuses {
+  margin-top: 20px;
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.15), rgba(255, 193, 7, 0.05));
+  border-radius: 10px;
+  padding: 15px;
+  border-left: 4px solid #FFC107;
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  min-height: 80px;
+}
+
+.performance-bonuses h4 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  color: #FFC107;
+  font-size: 16px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.bonus-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bonus-item {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.1));
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #fff;
+  border-left: 3px solid #FFC107;
+  animation: bonus-item-appear 0.5s ease-out;
+  min-height: 30px;
+  display: flex;
+  align-items: center;
+}
+
+@keyframes bonus-item-appear {
+  0% {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.battle-result.victory .result-header {
+  background: linear-gradient(135deg, #4CAF50, #66BB6A);
+  position: relative;
+  overflow: hidden;
+}
+
+.battle-result.victory .result-header::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 80% 50%, rgba(255, 255, 255, 0.3) 0%, transparent 50%);
+  animation: victory-sparkle 3s ease-in-out infinite;
+}
+
+@keyframes victory-sparkle {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.7; }
+}
+
+.battle-result.defeat .result-header {
+  background: linear-gradient(135deg, #F44336, #EF5350);
+  position: relative;
+}
+
+.battle-result.defeat .result-header::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, transparent 30%, rgba(0, 0, 0, 0.2) 50%, transparent 70%);
+  animation: defeat-shadow 2s ease-in-out infinite;
+}
+
+@keyframes defeat-shadow {
+  0%, 100% { transform: translateX(-100%); }
+  50% { transform: translateX(100%); }
+}
+
+.result-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.play-again-btn, .close-btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  position: relative;
+  overflow: hidden;
+  min-width: 140px;
+  height: 45px;
+}
+
+.play-again-btn {
+  color: white;
+  background: linear-gradient(135deg, #4CAF50, #66BB6A);
+  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+}
+
+.close-btn {
+  background: linear-gradient(135deg, #333, #555);
+  color: white;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.play-again-btn:hover, .close-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+/* ENHANCED TOOL/SPELL MODAL STYLES - COMPLETE REPLACEMENT */
+.tool-spell-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(5px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999; /* CRITICAL: Extremely high z-index to appear above everything */
+  overflow-y: auto;
+  /* Ensure this creates a new stacking context */
+  isolation: isolate;
+  transform: translateZ(0);
+}
+
+/* Enhanced Modal Container */
+.tool-spell-modal {
+  background: linear-gradient(135deg, #222, #333);
+  border-radius: 15px;
+  max-width: 800px;
+  width: 90%;
+  max-height: 80vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.7);
+  margin: 20px;
+  border: 2px solid rgba(76, 175, 80, 0.3);
+  position: relative; /* Ensure proper stacking */
+  z-index: 100000; /* CRITICAL: Even higher than overlay */
+}
+
+.tool-spell-modal.enhanced {
+  max-width: 1200px;
+  width: 95%;
+  max-height: 85vh;
+}
+
+/* Reset any overflow issues for cards */
+body.modal-open .player-hand {
+  z-index: 50 !important; /* Lower z-index when modal is open */
+  overflow: visible !important; /* FIXED: But keep overflow visible */
+}
+
+/* Keep overflow visible even when modal is open */
+body.modal-open .hand-card-wrapper,
+body.modal-open .creature-card {
+  z-index: 50 !important; /* Lower z-index */
+  overflow: visible !important; /* FIXED: But keep overflow visible */
+  visibility: visible !important; /* FIXED: Ensure visibility */
+}
+
+.modal-header {
+  padding: 15px;
+  background: linear-gradient(135deg, #333, #444);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid rgba(76, 175, 80, 0.3);
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: #fff;
+  font-size: 18px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.modal-header .close-btn {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 50%;
+  width: 35px;
+  height: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.modal-header .close-btn:hover {
+  background: rgba(244, 67, 54, 0.2);
+  color: #F44336;
+}
+
+.modal-content {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.1));
+}
+
+.modal-tabs {
+  display: flex;
+  margin-bottom: 20px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tab {
+  padding: 12px 20px;
+  cursor: pointer;
+  flex: 1;
+  text-align: center;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  color: #ccc;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.tab.active {
+  background: linear-gradient(135deg, #4CAF50, #66BB6A);
+  color: #fff;
+  font-weight: bold;
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+}
+
+.tab:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+/* Enhanced Items Grid */
+.items-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 15px;
+}
+
+.items-grid.enhanced {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  padding: 10px;
+}
+
+/* Enhanced Item Card */
+.item-card {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.2));
+  border-radius: 10px;
+  padding: 15px;
+  display: flex;
+  gap: 15px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.item-card.enhanced {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.7), rgba(20, 20, 30, 0.7));
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid rgba(76, 175, 80, 0.2);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 0;
+  gap: 0;
+}
+
+.item-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.5s;
+}
+
+.item-card:hover::before {
+  left: 100%;
+}
+
+.item-card:hover {
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.2), rgba(76, 175, 80, 0.1));
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  border-color: rgba(76, 175, 80, 0.5);
+}
+
+.item-card.enhanced:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  border-color: rgba(76, 175, 80, 0.5);
+}
+
+/* Item Header */
+.item-header {
+  display: flex;
+  align-items: center;
+  padding: 15px;
+  background: rgba(0, 0, 0, 0.3);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.item-header .item-image {
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
+  margin-right: 12px;
+  object-fit: cover;
+  border: 2px solid rgba(76, 175, 80, 0.3);
+}
+
+.item-image {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.item-title {
+  flex: 1;
+}
+
+.item-title .item-name {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: #4CAF50;
+}
+
+.item-type-effect {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.type-icon,
+.effect-icon {
+  font-size: 20px;
+  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.5));
+}
+
+/* Enhanced Item Details */
+.item-details {
+  flex: 1;
+}
+
+.item-details.enhanced {
+  flex: 1;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.item-name {
+  font-weight: bold;
+  font-size: 16px;
+  margin-bottom: 8px;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Item Properties */
+.item-properties {
+  font-size: 12px;
+  color: #ccc;
+  margin-bottom: 10px;
+}
+
+.item-properties {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.property-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+
+.property-row:last-child {
+  margin-bottom: 0;
+}
+
+.property-label {
+  color: #aaa;
+  font-weight: 500;
+}
+
+.property-value {
+  color: #fff;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.item-type, .item-effect {
+  display: inline-block;
+  margin-right: 10px;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 3px 8px;
+  border-radius: 12px;
+  margin-bottom: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: 11px;
+}
+
+/* Stat Changes Section */
+.stat-changes {
+  background: rgba(76, 175, 80, 0.1);
+  border: 1px solid rgba(76, 175, 80, 0.3);
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.stat-changes-header {
+  font-size: 14px;
+  font-weight: 600;
+  color: #4CAF50;
+  margin-bottom: 8px;
+}
+
+.stat-change-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+  font-size: 13px;
+}
+
+.stat-change-row:last-child {
+  margin-bottom: 0;
+}
+
+.stat-name {
+  color: #ccc;
+}
+
+.stat-value {
+  font-weight: 600;
+  font-family: monospace;
+  font-size: 14px;
+}
+
+/* Enhanced Description */
+.item-description {
+  font-size: 13px;
+  color: #ddd;
+  line-height: 1.4;
+}
+
+.item-description.enhanced {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #ddd;
+  flex: 1;
+}
+
+.description-line {
+  margin-bottom: 6px;
+  padding-left: 12px;
+  position: relative;
+}
+
+.description-line:before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: #4CAF50;
+}
+
+.description-line:last-child {
+  margin-bottom: 0;
+}
+
+/* Energy Cost Display */
+.energy-cost {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 193, 7, 0.2);
+  border: 1px solid rgba(255, 193, 7, 0.4);
+  border-radius: 20px;
+  padding: 4px 12px;
+  align-self: flex-start;
+}
+
+.cost-icon {
+  font-size: 16px;
+}
+
+.cost-value {
+  font-weight: 600;
+  color: #FFC107;
+  font-size: 14px;
+}
+
+/* Item Footer */
+.item-footer {
+  padding: 15px;
+  background: rgba(0, 0, 0, 0.3);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.select-button {
+  width: 100%;
+  background: linear-gradient(135deg, #4CAF50, #66BB6A);
+  border: none;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.select-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+}
+
+.select-button:active {
+  transform: translateY(0);
+}
+
+/* Rarity-based styling for items */
+.item-card.enhanced[data-rarity="common"] {
+  background: linear-gradient(135deg, rgba(117, 117, 117, 0.2), rgba(97, 97, 97, 0.2));
+}
+
+.item-card.enhanced[data-rarity="rare"] {
+  background: linear-gradient(135deg, rgba(33, 150, 243, 0.2), rgba(30, 136, 229, 0.2));
+}
+
+.item-card.enhanced[data-rarity="epic"] {
+  background: linear-gradient(135deg, rgba(156, 39, 176, 0.2), rgba(142, 36, 170, 0.2));
+}
+
+.item-card.enhanced[data-rarity="legendary"] {
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.2), rgba(255, 179, 0, 0.2));
+  box-shadow: 0 0 20px rgba(255, 193, 7, 0.3);
+}
+
+/* Special effect highlights */
+.stat-value.positive {
+  color: #4CAF50;
+}
+
+.stat-value.negative {
+  color: #F44336;
+}
+
+/* Damage/Healing highlights */
+.description-line.damage {
+  color: #FF6B6B;
+  font-weight: 600;
+}
+
+.description-line.healing {
+  color: #4CAF50;
+  font-weight: 600;
+}
+
+.description-line.warning {
+  color: #FFC107;
+  font-style: italic;
+}
+
+/* ===== ACTION PANEL SYNERGY INDICATOR ===== */
+.creature-synergy-indicator {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 8px;
+  padding: 2px 6px;
+  background: rgba(0, 188, 212, 0.2);
+  border: 1px solid rgba(0, 188, 212, 0.4);
+  border-radius: 12px;
+  font-size: 11px;
+  color: #00BCD4;
+  font-weight: bold;
+}
+
+/* Button text with energy cost */
+.btn-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* ===== AI STANCE ANIMATIONS ===== */
+
+/* Aggressive stance */
+@keyframes aggressive-stance-pulse {
+  0%, 100% {
+    filter: brightness(1) saturate(1);
+    transform: scale(1);
+  }
+  50% {
+    filter: brightness(1.3) saturate(1.5) hue-rotate(-10deg);
+    transform: scale(1.02);
+  }
+}
+
+.creature-card.aggressive-stance {
+  animation: aggressive-stance-pulse 2s ease-in-out infinite;
+  box-shadow: 0 0 20px rgba(255, 0, 0, 0.6) !important;
+  border-color: rgba(255, 0, 0, 0.5) !important;
+}
+
+.creature-card.aggressive-stance::before {
+  content: '⚔️';
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  font-size: 20px;
+  filter: drop-shadow(0 0 5px rgba(255, 0, 0, 0.8));
+  animation: float-icon 2s ease-in-out infinite;
+  z-index: 10;
+}
+
+/* Defensive stance */
+@keyframes defensive-stance-pulse {
+  0%, 100% {
+    filter: brightness(1) saturate(1);
+    transform: scale(1);
+  }
+  50% {
+    filter: brightness(1.1) saturate(1.2) hue-rotate(10deg);
+    transform: scale(0.98);
+  }
+}
+
+.creature-card.defensive-stance {
+  animation: defensive-stance-pulse 2.5s ease-in-out infinite;
+  box-shadow: 0 0 20px rgba(33, 150, 243, 0.6) !important;
+  border-color: rgba(33, 150, 243, 0.5) !important;
+}
+
+.creature-card.defensive-stance::before {
+  content: '🛡️';
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  font-size: 20px;
+  filter: drop-shadow(0 0 5px rgba(33, 150, 243, 0.8));
+  animation: float-icon 2.5s ease-in-out infinite;
+  z-index: 10;
+}
+
+/* Combo stance */
+@keyframes combo-stance-pulse {
+  0%, 100% {
+    filter: brightness(1) saturate(1);
+  }
+  25% {
+    filter: brightness(1.2) saturate(1.3) hue-rotate(45deg);
+  }
+  50% {
+    filter: brightness(1.1) saturate(1.2) hue-rotate(-45deg);
+  }
+  75% {
+    filter: brightness(1.3) saturate(1.4) hue-rotate(90deg);
+  }
+}
+
+.creature-card.combo-stance {
+  animation: combo-stance-pulse 1.5s ease-in-out infinite;
+  box-shadow: 0 0 20px rgba(128, 0, 128, 0.6) !important;
+  border-color: rgba(128, 0, 128, 0.5) !important;
+}
+
+/* Synergy stance */
+@keyframes synergy-stance-pulse {
+  0%, 100% {
+    filter: brightness(1) saturate(1);
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    filter: brightness(1.2) saturate(1.3);
+    transform: scale(1.05) rotate(2deg);
+  }
+}
+
+.creature-card.synergy-stance {
+  animation: synergy-stance-pulse 3s ease-in-out infinite;
+  box-shadow: 0 0 20px rgba(0, 188, 212, 0.6) !important;
+  border-color: rgba(0, 188, 212, 0.5) !important;
+}
+
+@keyframes float-icon {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+/* ===== SYNERGY VISUAL EFFECTS ===== */
+
+/* Synergy link lines between creatures */
+.synergy-link {
+  position: absolute;
+  height: 2px;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(0, 188, 212, 0.6) 20%, 
+    rgba(0, 188, 212, 0.6) 80%, 
+    transparent
+  );
+  transform-origin: left center;
+  pointer-events: none;
+  z-index: 1;
+  animation: synergy-pulse 2s ease-in-out infinite;
+}
+
+@keyframes synergy-pulse {
+  0%, 100% {
+    opacity: 0.5;
+    filter: brightness(1);
+  }
+  50% {
+    opacity: 1;
+    filter: brightness(1.5);
+  }
+}
+
+/* Synergy burst notification */
+.battle-synergy-notification {
+  font-family: 'Orbitron', sans-serif;
+  font-weight: bold;
+  font-size: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 30px currentColor;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+/* ===== ENHANCED STATUS EFFECT DISPLAYS ===== */
+
+/* Charge effect progress enhancement */
+.status-effect .charge-progress-bar {
+  position: absolute;
+  bottom: -6px;
+  left: -4px;
+  right: -4px;
+  height: 4px;
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.charge-progress-bar .charge-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #FFC107, #FFD700);
+  transition: width 0.3s ease;
+  box-shadow: 0 0 5px rgba(255, 215, 0, 0.7);
+  position: relative;
+}
+
+.charge-progress-bar .charge-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(255, 255, 255, 0.3) 50%, 
+    transparent
+  );
+  animation: charge-shimmer 2s linear infinite;
+}
+
+@keyframes charge-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.ready-indicator {
+  position: absolute;
+  top: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  font-weight: bold;
+  color: #FFD700;
+  text-shadow: 0 0 5px rgba(255, 215, 0, 0.8);
+  animation: ready-pulse 0.5s ease infinite;
+  white-space: nowrap;
+}
+
+@keyframes ready-pulse {
+  0%, 100% {
+    transform: translateX(-50%) scale(1);
+    text-shadow: 0 0 5px rgba(255, 215, 0, 0.8);
+  }
+  50% {
+    transform: translateX(-50%) scale(1.1);
+    text-shadow: 0 0 10px rgba(255, 215, 0, 1);
+  }
+}
+
+/* Echo effect visual enhancement */
+.echo-pulse-indicator {
+  position: absolute;
+  inset: -15px;
+  pointer-events: none;
+}
+
+.pulse-ring {
+  position: absolute;
+  inset: 0;
+  border: 2px solid rgba(132, 0, 255, 0.6);
+  border-radius: 50%;
+  animation: echo-pulse-ring 2s ease-out infinite;
+}
+
+.pulse-ring:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.pulse-ring:nth-child(2) {
+  animation-delay: 0.7s;
+  border-color: rgba(132, 0, 255, 0.4);
+}
+
+.pulse-ring:nth-child(3) {
+  animation-delay: 1.4s;
+  border-color: rgba(132, 0, 255, 0.2);
+}
+
+@keyframes echo-pulse-ring {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+/* ===== COMBO COUNTER ENHANCEMENTS ===== */
+
+/* Smaller combo counter */
+.combo-counter {
+  position: relative;
+  overflow: hidden;
+  padding: 2px 6px;
+  font-size: 10px;
+  border-radius: 4px;
+  background: rgba(255, 193, 7, 0.2);
+  border: 1px solid rgba(255, 193, 7, 0.5);
+}
+
+.combo-value {
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.combo-counter::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, 
+    transparent, 
+    currentColor, 
+    transparent
+  );
+  opacity: 0.3;
+  border-radius: 20px;
+  animation: combo-rotate 3s linear infinite;
+}
+
+@keyframes combo-rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* High combo effects */
+.combo-counter[data-combo="3"],
+.combo-counter[data-combo="4"],
+.combo-counter[data-combo="5"] {
+  animation: combo-pulse 0.5s ease, combo-glow 2s ease-in-out infinite;
+}
+
+@keyframes combo-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px currentColor;
+  }
+  50% {
+    box-shadow: 0 0 30px currentColor, 0 0 40px currentColor;
+  }
+}
+
+/* ===== ENERGY MOMENTUM VISUAL ENHANCEMENTS ===== */
+
+.momentum-indicator {
+  position: relative;
+  overflow: visible;
+}
+
+.momentum-indicator::after {
+  content: attr(data-next-threshold);
+  position: absolute;
+  top: -20px;
+  right: 0;
+  font-size: 10px;
+  color: #FFC107;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.momentum-indicator:hover::after {
+  opacity: 1;
+}
+
+.momentum-progress {
+  position: relative;
+  background: linear-gradient(90deg, currentColor, transparent);
+  box-shadow: 0 0 10px currentColor;
+}
+
+.momentum-progress::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 4px;
+  height: 100%;
+  background: currentColor;
+  box-shadow: 0 0 10px currentColor;
+  animation: momentum-pulse 1s ease-in-out infinite;
+}
+
+@keyframes momentum-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scaleX(1.5);
+  }
+}
+
+/* ===== DAMAGE TYPE VISUAL INDICATORS ===== */
+
+/* Devastating damage screen effect */
+.screen-effect-devastating {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  background: radial-gradient(circle at center, 
+    transparent 30%, 
+    rgba(255, 100, 0, 0.2) 70%, 
+    rgba(255, 0, 0, 0.3) 100%
+  );
+  animation: devastating-flash 0.5s ease-out;
+}
+
+@keyframes devastating-flash {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Glancing blow effect */
+.damage-type-glancing {
+  animation: glancing-deflect 0.5s ease-out;
+}
+
+@keyframes glancing-deflect {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  50% {
+    transform: translate(-50%, -50%) rotate(-15deg) translateX(10px);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+}
+
+/* MOBILE ADJUSTMENTS - FIXED WITH PROPER LAYOUT */
+@media (max-width: 768px) {
+  .battle-game-overlay {
+    align-items: flex-start;
+    padding: 0;
+  }
+  
+  .battle-game {
+    margin: 0;
+    max-height: 100vh;
+    height: 100vh;
+    border-radius: 0;
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* Simplified mobile header */
+  .battle-header {
+    padding: 5px 8px;
+    max-height: 60px;
+    min-height: 45px;
+  }
+  
+  /* Ultra-simple synergy display for mobile */
+  .field-synergies {
+    display: none; /* Hide synergy breakdown */
+  }
+  
+  /* Add synergy total to energy displays */
+  .player-energy::after,
+  .enemy-energy::after {
+    content: attr(data-synergy);
+    display: block;
+    font-size: 9px;
+    font-weight: bold;
+    margin-top: 2px;
+  }
+  
+  .player-energy::after {
+    color: #4CAF50;
+  }
+  
+  .enemy-energy::after {
+    color: #F44336;
+  }
+  
+  /* Mobile content wrapper */
+  .battle-content-wrapper {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 40px); /* Subtract header height */
+    overflow: hidden;
+    position: relative;
+  }
+  
+  /* Mobile main area */
+  .battle-main-area {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+    height: auto;
+  }
+  
+  /* Mobile battlefield container */
+  .battlefield-container {
+    flex: 1; /* Take remaining space */
+    display: flex;
+    flex-direction: column;
+    overflow: visible !important; /* Allow status effects to show */
+    height: 45vh; /* Fixed height for battlefield */
+    position: relative;
+  }
+  
+  /* Mobile battlefield */
+  .battlefield {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    overflow: visible !important; /* Allow status effects to show */
+    position: relative;
+  }
+  
+  /* ===== CONSISTENT CARD SIZES FOR MOBILE ===== */
+  /* Ensure ALL cards have the same size */
+  .battlefield-enemy .creature-card,
+  .battlefield-player .creature-card,
+  .player-hand .creature-card,
+  .hand-card-wrapper .creature-card {
+    width: 90px !important; /* Slightly larger than before */
+    height: 135px !important; /* Proportionally larger */
+    flex-shrink: 0;
+  }
+  
+  /* Image container */
+  .battlefield-enemy .creature-image-container,
+  .battlefield-player .creature-image-container,
+  .player-hand .creature-image-container,
+  .hand-card-wrapper .creature-image-container {
+    height: 80px !important; /* Slightly larger */
+  }
+  
+  /* Card header */
+  .battlefield-enemy .creature-card-header,
+  .battlefield-player .creature-card-header,
+  .player-hand .creature-card-header,
+  .hand-card-wrapper .creature-card-header {
+    padding: 4px 6px;
+    font-size: 9px;
+    height: 20px;
+  }
+  
+  /* Card footer */
+  .battlefield-enemy .creature-card-footer,
+  .battlefield-player .creature-card-footer,
+  .player-hand .creature-card-footer,
+  .hand-card-wrapper .creature-card-footer {
+    height: 35px;
+    padding: 3px;
+  }
+  
+  /* Stats grid */
+  .battlefield-enemy .mini-stats,
+  .battlefield-player .mini-stats,
+  .player-hand .mini-stats,
+  .hand-card-wrapper .mini-stats {
+    gap: 3px;
+    padding: 3px;
+  }
+  
+  /* Individual stat items */
+  .battlefield-enemy .mini-stat,
+  .battlefield-player .mini-stat,
+  .player-hand .mini-stat,
+  .hand-card-wrapper .mini-stat {
+    font-size: 8px; /* Slightly larger for better readability */
+    height: 14px;
+    padding: 1px 2px;
+  }
+  
+  /* Icons in stats */
+  .battlefield-enemy .mini-stat .stat-icon,
+  .battlefield-player .mini-stat .stat-icon,
+  .player-hand .mini-stat .stat-icon,
+  .hand-card-wrapper .mini-stat .stat-icon {
+    font-size: 9px;
+  }
+  
+  /* Stat values */
+  .battlefield-enemy .mini-stat .stat-value,
+  .battlefield-player .mini-stat .stat-value,
+  .player-hand .mini-stat .stat-value,
+  .hand-card-wrapper .mini-stat .stat-value {
+    font-size: 8px;
+    color: #fff !important; /* Force white color on mobile too */
+  }
+  
+  /* Health bar */
+  .battlefield-enemy .health-bar-container,
+  .battlefield-player .health-bar-container,
+  .player-hand .health-bar-container,
+  .hand-card-wrapper .health-bar-container {
+    height: 7px;
+    margin: 3px;
+  }
+  
+  /* Health text */
+  .battlefield-enemy .health-text,
+  .battlefield-player .health-text,
+  .player-hand .health-text,
+  .hand-card-wrapper .health-text {
+    font-size: 8px;
+  }
+  
+  /* Improve battlefield layout */
+  .battlefield-enemy, 
+  .battlefield-player {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: nowrap;
+    padding: 5px;
+    gap: 5px;
+    overflow-x: auto;
+    overflow-y: visible !important; /* Allow status effects to show */
+    height: 50%;
+    position: relative;
+  }
+  
+  .battlefield-enemy {
+    border-bottom: 1px solid rgba(244, 67, 54, 0.3);
+  }
+  
+  .battlefield-player {
+    border-top: 1px solid rgba(76, 175, 80, 0.3);
+  }
+  
+  .battlefield-center {
+    height: 24px; /* Smaller on mobile */
+    font-size: 10px;
+  }
+  
+  /* Mobile creature slots */
+  .creature-slot {
+    width: 90px;
+    height: 135px;
+    flex-shrink: 0;
+    margin: 2px;
+  }
+  
+  /* Mobile optimizations for clean layout */
+  .creature-card-header .creature-form {
+    font-size: 8px;
+    padding: 1px 3px;
+  }
+  
+  .attack-type-indicator {
+    width: 20px;
+    height: 20px;
+    bottom: 3px !important;
+    right: 3px !important;
+  }
+  
+  .attack-icon {
+    font-size: 10px;
+  }
+  
+  .status-effects {
+    top: 25px;
+    left: 3px;
+  }
+  
+  /* MOBILE HAND - FIXED POSITION AT BOTTOM */
+  .player-hand {
+    height: 145px !important; /* Adjusted for larger cards */
+    position: relative;
+    overflow: visible !important;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.85));
+    border-top: 2px solid rgba(76, 175, 80, 0.3);
+    z-index: 50 !important; /* FIXED: Lowered z-index to allow modals to appear above it */
+    flex-shrink: 0;
+    width: 100%;
+    margin-top: auto; /* Push to bottom */
+  }
+  
+  .hand-cards {
+    display: flex;
+    gap: 5px;
+    padding: 5px 10px;
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+    height: 100%;
+  }
+  
+  .hand-card-wrapper {
+    width: 90px;
+    flex-shrink: 0;
+    height: 135px;
+  }
+  
+  /* Selected card on mobile */
+  .hand-card-wrapper.selected .creature-card {
+    transform: scale(1.05) !important;
+    z-index: 100;
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.8);
+  }
+  
+  /* Mobile hand cards specific */
+  .hand-card-wrapper .attack-type-indicator {
+    width: 16px;
+    height: 16px;
+    bottom: 2px !important;
+    right: 2px !important;
+  }
+  
+  .hand-card-wrapper .attack-icon {
+    font-size: 8px;
+  }
+  
+  .hand-card-wrapper .creature-card-header {
+    height: 16px;
+    padding: 2px 4px;
+  }
+  
+  /* Ensure hand cards maintain size with status effects */
+  .hand-card-wrapper .creature-card {
+    width: 90px !important;
+    height: 135px !important;
+    overflow: visible !important;
+  }
+  
+  .hand-card-wrapper .status-effects {
+    overflow: visible !important;
+    width: 0;
+    height: 0;
+  }
+
+/* Reset previous approaches - Back to basics with a better stacking context solution */
+.battle-game-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999999 !important; /* EXTREMELY high z-index to be above everything */
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Ensure the battle game inherits the high z-index */
+.battle-game {
+  /* Main styles remain unchanged */
+  width: 100%;
+  max-width: 1400px;
+  height: auto;
+  min-height: 600px;
+  margin: 10px auto;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f1419 100%);
+  border-radius: 12px;
+  overflow: visible;
+  color: #e6e6e6;
+  font-family: 'Orbitron', sans-serif;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7), 0 0 20px rgba(76, 175, 80, 0.1);
+  position: relative;
+  z-index: inherit; /* Inherit the high z-index from parent */
+  border: 2px solid rgba(76, 175, 80, 0.3);
+}
+
+/* DIRECT CODE-BASED SOLUTION FOR MOBILE RADIX BUTTON */
+/* This uses the exact styles and identifiers from your MobileRadixWrapper component */
+body:has(.battle-game-overlay) button[style*="position: fixed"][style*="top: 10px"][style*="right: 60px"],
+body:has(.battle-game-overlay) button[style*="position:fixed"][style*="top:10px"][style*="right:60px"],
+body:has(.battle-game-overlay) button[style*="position: fixed; top: 10px; right: 60px"],
+body:has(.battle-game-overlay) button[style*="zIndex: 10000"],
+body:has(.battle-game-overlay) button[style*="z-index: 10000"] {
+  /* Since this is in the MobileRadixWrapper.jsx code:
+     position: 'fixed',
+     top: '10px',
+     right: '60px',
+     zIndex: 10000,
+  */
+  display: none !important;
+  top: -9999px !important;
+  left: -9999px !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+  
+  /* MOBILE BATTLE LOG */
+  .battle-log.mobile {
+    max-height: 120px;
+    background: rgba(0, 0, 0, 0.8);
+    border-top: 1px solid rgba(255, 193, 7, 0.3);
+    flex-shrink: 0;
+    z-index: 40;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .battle-log.mobile .log-title {
+    font-size: 12px;
+    padding: 5px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #FFC107;
+    background: rgba(0, 0, 0, 0.4);
+  }
+  
+  /* Fixed height and scrolling for mobile battle log */
+  .battle-log.mobile .log-entries {
+    max-height: 90px;
+    overflow-y: auto;
+    padding: 5px 10px;
+    font-size: 10px;
+  }
+  
+  .battle-log.mobile .log-entry {
+    margin-bottom: 4px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  /* MOBILE ACTION PANEL */
+  .action-panel {
+    padding: 6px 8px;
+    background: rgba(0, 0, 0, 0.8);
+    border-top: 1px solid rgba(76, 175, 80, 0.3);
+    flex-shrink: 0;
+    z-index: 60;
+    position: relative;
+  }
+  
+  .action-panel .selected-info {
+    font-size: 10px;
+    padding: 4px 6px;
+    margin-bottom: 4px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+  }
+  
+  .action-panel .action-buttons {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px;
+  }
+  
+  .action-panel .action-btn {
+    padding: 5px 8px;
+    font-size: 10px;
+    flex-grow: 1;
+    flex-basis: 0;
+    min-width: 0;
+    text-align: center;
+    border-radius: 4px;
+  }
+  
+  .action-panel .action-btn .btn-icon {
+    font-size: 12px;
+    margin-right: 3px;
+  }
+
+  /* Tool/Spell modal on mobile */
+  .tool-spell-modal-overlay {
+    z-index: 99999 !important; /* Ensure it's highest on mobile too */
+  }
+
+  /* Fix for behind-modal class on mobile */
+  .behind-modal {
+    visibility: visible !important; /* FIXED: changed from hidden to visible */
+  }
+  
+  /* NEW MOBILE OPTIMIZATIONS FOR ACTION PANEL ENHANCEMENTS */
+  .creature-synergy-indicator {
+    font-size: 10px;
+    padding: 1px 4px;
+  }
+  
+  /* Smaller stance indicators on mobile */
+  .creature-card.aggressive-stance::before,
+  .creature-card.defensive-stance::before {
+    font-size: 16px;
+    top: -5px;
+  }
+  
+  /* Adjust combo counter for mobile */
+  .combo-counter {
+    padding: 3px 8px;
+    font-size: 12px;
+  }
+  
+  .combo-value {
+    font-size: 14px;
+  }
+  
+  /* Smaller momentum indicator */
+  .momentum-indicator {
+    height: 6px;
+  }
+  
+  .momentum-text {
+    font-size: 8px;
+  }
+  
+  /* Mobile stat changes overlay adjustments */
+  .stat-changes-overlay {
+    padding: 4px 6px;
+    gap: 2px;
+    max-width: 85%;
+  }
+  
+  .stat-change {
+    font-size: 9px;
+  }
+  
+  /* Mobile defense effect indicator */
+  .defense-effect-indicator {
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+    top: 3px;
+    right: 3px;
+  }
+  
+  .defense-effect-indicator .defense-duration {
+    width: 12px;
+    height: 12px;
+    font-size: 8px;
+    bottom: -2px;
+    right: -2px;
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+  .player-hand {
+    cursor: default;
+  }
+  
+  .battle-log:hover {
+    max-height: 80px;
+  }
+  
+  .battle-log.expanded {
+    max-height: 150px;
+  }
+  
+  .action-btn {
+    min-height: 36px;
+  }
+  
+  .creature-card {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* High contrast mode for better visibility */
+@media (prefers-contrast: high) {
+  .mini-stat {
+    border-width: 2px;
+    font-weight: bold;
+  }
+  
+  .creature-card {
+    border-width: 3px;
+  }
+}
+
+/* Ultra-wide screen optimizations */
+@media (min-width: 1600px) {
+  .battle-game {
+    max-width: 1600px;
+  }
+  
+  .battle-log-sidebar {
+    width: 250px;
+  }
+  
+  .action-panel-sidebar {
+    width: 250px;
+  }
+  
+  .battlefield-enemy,
+  .battlefield-player {
+    gap: 15px;
+    padding: 20px 15px;
+  }
+  
+  .creature-card {
+    width: 140px;
+    height: 200px;
+  }
+  
+  .creature-image-container {
+    height: 128px;
+  }
+  
+  .creature-card-footer {
+    height: 52px;
+  }
+  
+  .mini-stats {
+    gap: 3px;
+  }
+  
+  .mini-stat {
+    font-size: 10px;
+    height: 16px;
+    padding: 2px 3px;
+  }
+}
+
+/* Performance optimizations */
+.creature-card {
+  will-change: transform;
+}
+
+.health-bar,
+.energy-bar {
+  will-change: width;
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  .creature-card,
+  .action-btn,
+  .player-hand,
+  .battle-log {
+    transition: none;
+  }
+  
+  .health-bar,
+  .energy-bar {
+    transition: none;
+  }
+  
+  @keyframes pulse-new {
+    0%, 100% { opacity: 1; }
+  }
+}
+
+/* Z-index hierarchy for proper layering
+  20: Center battlefield divider
+  30: Battle log and action panel sidebars
+  40: Battle log
+  50: Player hand base (LOWERED from 100)
+  60: Action panel
+  100: Mobile selected cards / Desktop hand cards
+  1000: Desktop hovered hand cards
+  1001: Desktop selected hand cards
+  1002: Additional insurance for selected cards to be visible
+  99999: Modals overlay
+  100000: Modal content
+*/
+
+/* IMPORTANT: Preserve desktop card expansion behavior */
+@media (min-width: 769px) {
+  /* Ensure hand cards can overflow and remain visible */
+  .player-hand {
+    overflow: visible !important;
+  }
+  
+  .hand-card-wrapper {
+    overflow: visible !important;
+  }
+  
+  .hand-card-wrapper .creature-card,
+  .hand-card-wrapper:hover .creature-card,
+  .hand-card-wrapper.selected .creature-card {
+    overflow: visible !important;
+    visibility: visible !important;
+    z-index: 1002;
+  }
+}
+
+/* Fix for mobile browsers where battlefield content gets cut off */
+@media (max-width: 768px) {
+  /* Force the battle game to constrain to viewport width */
+  .battle-game-overlay {
+    width: 100vw;
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+  
+  .battle-game {
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+  
+  /* Critical fix for battlefield container */
+  .battlefield-container {
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+  
+  /* Force the battlefield to respect viewport width */
+  .battlefield {
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+  
+  /* ONLY make enemy field scrollable */
+  .battlefield-enemy {
+    width: 100%;
+    max-width: 100vw;
+    justify-content: flex-start; /* Left-align instead of center */
+    overflow-x: auto;
+    overflow-y: visible !important; /* Allow status effects to show vertically */
+    padding: 5px 0; /* Remove horizontal padding */
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+    position: relative;
+    /* Add padding for status effects */
+    padding-left: 5px;
+    padding-right: 5px;
+  }
+  
+  /* Keep player field fixed and centered */
+  .battlefield-player {
+    width: 100%;
+    max-width: 100vw;
+    justify-content: center; /* Keep centered */
+    overflow-x: hidden; /* Prevent scrolling */
+    overflow-y: visible !important; /* Allow status effects to show vertically */
+    padding: 5px 0;
+    position: relative;
+    /* Add padding for status effects */
+    padding-left: 5px;
+    padding-right: 5px;
+  }
+  
+  /* Fix for creature slots to ensure they don't get cut off */
+  .battlefield-enemy .creature-slot,
+  .battlefield-enemy .creature-card {
+    flex-shrink: 0; /* Prevent shrinking */
+    margin: 2px;
+  }
+  
+  /* Firefox-specific mobile fixes */
+  @-moz-document url-prefix() {
+    .battlefield-enemy {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory; /* Improve scrolling */
+    }
+    
+    .battlefield-enemy .creature-slot,
+    .battlefield-enemy .creature-card {
+      scroll-snap-align: start; /* Snap to creatures when scrolling */
+    }
+    
+    .battlefield-player {
+      overflow-x: hidden;
+    }
+  }
+  
+  /* Chrome-specific mobile fixes */
+  @media screen and (-webkit-min-device-pixel-ratio: 0) {
+    .battlefield-enemy {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: auto;
+    }
+    
+    .battlefield-player {
+      overflow-x: hidden;
+    }
+    
+    /* Force containment for Chrome */
+    .battle-game-overlay,
+    .battle-game,
+    .battlefield-container,
+    .battlefield {
+      max-width: 100vw;
+      overflow-x: hidden;
+    }
+  }
+  
+  /* Ensure the battle log and action panel don't get cut off */
+  .battle-log.mobile,
+  .action-panel {
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+  
+  /* Add a subtle hint that enemy field is scrollable when necessary */
+  .battlefield-enemy.large-field::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 20px;
+    height: 100%;
+    background: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.3));
+    pointer-events: none;
+    opacity: 0.7;
+    z-index: 10;
+  }
+}
+
+/* Ensure card overflow visibility is preserved regardless of browser */
+.hand-card-wrapper {
+  overflow: visible !important;
+}
+
+.hand-card-wrapper .creature-card {
+  overflow: visible !important;
+}
+
+.hand-card-wrapper:hover .creature-card,
+.hand-card-wrapper.selected .creature-card {
+  overflow: visible !important;
+  visibility: visible !important;
+  z-index: 1002;
+}
+
+  /* Mobile Responsive for Enhanced Modal */
+@media (max-width: 768px) {
+  .tool-spell-modal.enhanced {
+    max-width: 100%;
+    max-height: 100%;
+    height: 100%;
+    border-radius: 0;
+  }
+  
+  .items-grid.enhanced {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+  }
+  
+  .item-card.enhanced {
+    max-height: none;
+  }
+  
+  .item-header {
+    padding: 12px;
+  }
+  
+  .item-details.enhanced {
+    padding: 12px;
+    gap: 10px;
+  }
+}
+
+/* For very small screens */
+@media (max-width: 400px) {
+  .battle-header {
+    max-height: 50px;
+    min-height: 45px;
+  }
+  
+  .energy-value {
+    font-size: 14px;
+  }
+}
+
+/* ===== MOBILE-ONLY SURGICAL FIXES ===== */
+
+/* Fix 1: Adjust mobile card layout to prevent stats overflow */
+@media (max-width: 768px) {
+  /* Reduce image container height to make room for stats */
+  .battlefield-enemy .creature-image-container,
+  .battlefield-player .creature-image-container,
+  .player-hand .creature-image-container,
+  .hand-card-wrapper .creature-image-container {
+    height: 70px !important; /* Reduced from 80px */
+  }
+  
+  /* Ensure footer has proper height for stats */
+  .battlefield-enemy .creature-card-footer,
+  .battlefield-player .creature-card-footer,
+  .player-hand .creature-card-footer,
+  .hand-card-wrapper .creature-card-footer {
+    height: 45px !important; /* Increased from 35px */
+    padding: 2px;
+  }
+  
+  /* Adjust header to be more compact */
+  .battlefield-enemy .creature-card-header,
+  .battlefield-player .creature-card-header,
+  .player-hand .creature-card-header,
+  .hand-card-wrapper .creature-card-header {
+    padding: 3px 5px; /* Reduced padding */
+    font-size: 8px;
+    height: 18px; /* Reduced from 20px */
+  }
+  
+  /* Ensure health bar stays compact */
+  .battlefield-enemy .health-bar-container,
+  .battlefield-player .health-bar-container,
+  .player-hand .health-bar-container,
+  .hand-card-wrapper .health-bar-container {
+    height: 6px; /* Reduced from 7px */
+    margin: 2px;
+  }
+  
+  /* Adjust mini-stats grid to fit properly */
+  .battlefield-enemy .mini-stats,
+  .battlefield-player .mini-stats,
+  .player-hand .mini-stats,
+  .hand-card-wrapper .mini-stats {
+    gap: 2px; /* Reduced from 3px */
+    padding: 2px;
+    height: calc(100% - 12px); /* Adjust for health bar */
+  }
+  
+  /* Make stat items more compact */
+  .battlefield-enemy .mini-stat,
+  .battlefield-player .mini-stat,
+  .player-hand .mini-stat,
+  .hand-card-wrapper .mini-stat {
+    font-size: 7px; /* Reduced from 8px */
+    height: 13px; /* Reduced from 14px */
+    padding: 1px;
+  }
+}
+
+/* Fix 2: Reduce buff/debuff status effect sizes on mobile */
+@media (max-width: 768px) {
+  /* Individual status effect icons - smaller size */
+  .status-effect {
+    width: 20px !important; /* Much smaller */
+    height: 20px !important;
+    position: relative;
+  }
+  
+  /* Effect icon inside */
+  .status-effect .effect-icon {
+    font-size: 12px !important; /* Reduced from default */
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* Duration text */
+  .status-effect .effect-duration {
+    font-size: 8px !important;
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 50%;
+    width: 12px;
+    height: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+  
+  /* Stack counter */
+  .status-effect .effect-stack-counter {
+    font-size: 8px !important;
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    background: rgba(255, 193, 7, 0.9);
+    border-radius: 50%;
+    width: 12px;
+    height: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+  
+  /* Status icon (older style) */
+  .status-icon {
+    width: 14px !important;
+    height: 14px !important;
+    font-size: 9px !important;
+  }
+  
+  /* Buff/debuff icons specifically */
+  .buff-icon {
+    font-size: 10px !important;
+  }
+}
+
+/* Fix 3: Hide battle header when modal is open on mobile */
+@media (max-width: 768px) {
+  /* When modal is open, hide the battle header */
+  body:has(.tool-spell-modal-overlay) .battle-header {
+    display: none !important;
+  }
+  
+  /* Adjust battle content to use full height when header is hidden */
+  body:has(.tool-spell-modal-overlay) .battle-content-wrapper {
+    height: 100vh !important; /* Full viewport height */
+  }
+  
+  /* Ensure modal has proper z-index hierarchy */
+  .tool-spell-modal-overlay {
+    z-index: 999999 !important;
+  }
+  
+  .tool-spell-modal {
+    z-index: 1000000 !important;
+  }
+}
+
+/* Additional mobile card refinements for better layout */
+@media (max-width: 768px) {
+  /* Ensure creature name doesn't overflow */
+  .creature-name {
+    font-size: 9px;
+    max-width: 55px;
+  }
+  
+  /* Make form indicator smaller */
+  .creature-form {
+    font-size: 7px;
+    padding: 0 2px;
+  }
+  
+  /* Adjust attack type indicator for mobile */
+  .attack-type-indicator {
+    width: 18px !important;
+    height: 18px !important;
+    bottom: 2px !important;
+    right: 2px !important;
+  }
+  
+  .attack-type-indicator .attack-icon {
+    font-size: 9px !important;
+  }
+  
+  /* Ensure special slot in stats grid is properly sized */
+  .mini-stat.special-slot {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* Rarity indicators */
+  .rarity-indicator {
+    font-size: 8px !important;
+  }
+}
+
+/* Ensure proper overflow handling without breaking other elements */
+@media (max-width: 768px) {
+  /* Keep cards at fixed size with proper overflow handling */
+  .creature-card {
+    overflow: visible !important; /* Allow status effects to show outside */
+    position: relative;
+    /* Force exact dimensions */
+    width: 90px !important;
+    height: 135px !important;
+    min-width: 90px !important;
+    min-height: 135px !important;
+    max-width: 90px !important;
+    max-height: 135px !important;
+    flex-shrink: 0;
+  }
+  
+  /* Ensure the card wrapper doesn't shrink */
+  .creature-slot {
+    overflow: visible !important;
+    position: relative;
+  }
+  
+  /* Status effects positioned absolutely outside card bounds */
+  .creature-card .status-effects {
+    overflow: visible;
+    position: absolute;
+    /* Position outside the card to not affect sizing */
+    top: 20px; /* Adjusted to align with card header */
+    left: -2px; /* Slightly outside left edge */
+    z-index: 15;
+    /* Don't affect parent sizing */
+    width: 0;
+    height: 0;
+  }
+  
+  /* Individual status effect positioning */
+  .status-effect {
+    position: absolute !important;
+    left: 0;
+    margin-bottom: 2px;
+  }
+  
+  /* Stack effects vertically */
+  .status-effect:nth-child(1) { top: 0; }
+  .status-effect:nth-child(2) { top: 22px; }
+  .status-effect:nth-child(3) { top: 44px; }
+  .status-effect:nth-child(4) { top: 66px; }
+  
+  /* Ensure card content stays within bounds */
+  .creature-card > *:not(.status-effects) {
+    position: relative;
+  }
+  
+  /* Buff icons container fix */
+  .buff-icons {
+    position: absolute;
+    top: 25px;
+    left: 3px;
+    z-index: 15;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    /* Don't affect parent sizing */
+    width: 0;
+    height: 0;
+    overflow: visible;
+  }
+  
+  /* Individual buff icon positioning */
+  .buff-icon {
+    position: relative;
+    width: 14px;
+    height: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 50%;
+    font-size: 10px !important;
+  }
+}

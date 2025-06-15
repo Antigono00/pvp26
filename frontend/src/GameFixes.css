@@ -1,0 +1,203 @@
+/* GameFixes.css - UI fixes while preserving PvP functionality */
+
+/* App container fixes */
+.app-container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Game container fixes */
+.game-container {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  flex: 1;
+  overflow: hidden;
+  z-index: 1; /* Lower z-index to ensure game is below UI elements */
+}
+
+/* Make sure the side panel has proper dimensions */
+.side-panel {
+  background: rgba(40, 40, 40, 0.95);
+  padding: 20px;
+  width: 300px;
+  min-width: 300px;
+  height: 600px;
+  border-radius: 10px 0 0 10px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: transform 0.3s ease;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+/* Canvas styling */
+#gameCanvas {
+  border-radius: 0 10px 10px 0;
+  flex: 1;
+  height: 600px;
+  max-width: calc(100% - 300px);
+  background: #1a1a1a !important; /* Ensure no blue background */
+  border: 1px solid rgba(76, 175, 80, 0.3);
+}
+
+/* Fixed z-index hierarchy for UI elements */
+.mobile-menu-btn {
+  z-index: 10001 !important; /* Highest */
+  color: white !important; /* Ensure readability */
+  background-color: rgba(76, 175, 80, 0.9) !important; /* Green background */
+}
+
+.low-corvax-message {
+  z-index: 10010 !important; /* Highest for messages */
+}
+
+.side-panel {
+  z-index: 9999 !important; /* Very high but below message */
+}
+
+.mobile-hud {
+  z-index: 8000 !important; /* High but below side panel */
+}
+
+.room-navigation {
+  z-index: 7000 !important; /* Below mobile HUD */
+}
+
+/* Battle Game and PvP Menu overlay */
+.battle-game, .pvp-menu-overlay {
+  z-index: 9995 !important; /* Higher than game content but below menus */
+}
+
+/* PvP button styling */
+.pvp-button-sidebar {
+  background: linear-gradient(45deg, #f44336, #ff5722) !important;
+  transition: all 0.3s ease !important;
+  padding: 12px 15px;
+  border-radius: 8px;
+  color: white;
+  font-weight: bold;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  width: 100%;
+  border: none;
+  margin-bottom: 10px;
+}
+
+.pvp-button-sidebar:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(244, 67, 54, 0.5) !important;
+  background: linear-gradient(45deg, #ff5722, #f44336) !important;
+}
+
+.pvp-button-sidebar:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #666 !important;
+  border-color: #555;
+}
+
+/* Mobile optimization */
+@media (max-width: 768px) {
+  .game-container.mobile {
+    position: relative;
+    flex-direction: column;
+    height: calc(100vh - 46px);
+  }
+  
+  .game-container.mobile .side-panel {
+    position: fixed;
+    top: 46px;
+    left: 0;
+    transform: translateX(-100%);
+    width: 85vw;
+    height: calc(100vh - 46px);
+    max-height: calc(100vh - 46px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 0 10px 10px 0;
+    padding: 10px 8px;
+    z-index: 9999;
+  }
+  
+  .game-container.mobile .side-panel.open {
+    transform: translateX(0);
+  }
+  
+  #gameCanvas {
+    border-radius: 0;
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    margin-bottom: 0;
+  }
+  
+  /* Make sure mobile HUD is properly displayed */
+  .mobile-hud {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    position: fixed;
+    top: 60px !important;
+    left: 10px !important;
+    right: 10px !important;
+    height: auto !important;
+    min-height: 40px !important;
+    padding: 5px !important;
+    background: rgba(0, 0, 0, 0.95) !important;
+    border-radius: 10px;
+    margin: 0 !important;
+    border: 1px solid rgba(76, 175, 80, 0.3);
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
+  }
+  
+  .mobile-resource {
+    flex: 0 0 calc(50% - 10px) !important;
+    font-family: "Orbitron", sans-serif !important;
+    font-size: 12px !important;
+    color: white !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    margin: 3px !important;
+    padding: 3px !important;
+    background-color: rgba(0, 0, 0, 0.5) !important;
+    border-radius: 8px !important;
+    border: 1px solid rgba(76, 175, 80, 0.2) !important;
+  }
+  
+  .mobile-menu-btn {
+    display: block;
+    padding: 8px 12px;
+    font-size: 1em;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    position: fixed;
+    top: 10px;
+    left: 10px;
+  }
+}
+
+/* Fix for game container wrapper to ensure proper layout */
+.game-container-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: transparent; /* Ensure no blue background here */
+}
+
+/* Ensure menu text readability */
+.mobile-menu-btn {
+  font-weight: bold !important;
+  color: white !important;
+}

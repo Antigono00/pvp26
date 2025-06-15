@@ -1,0 +1,328 @@
+.pvp-stats-container {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.pvp-stats-loading,
+.pvp-stats-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  color: #3282b8;
+}
+
+.pvp-stats-error button {
+  margin-top: 20px;
+  padding: 10px 25px;
+  background: rgba(50, 130, 184, 0.2);
+  color: #3282b8;
+  border: 2px solid #3282b8;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.pvp-stats-error button:hover {
+  background: rgba(50, 130, 184, 0.3);
+  transform: scale(1.05);
+}
+
+/* Overview section */
+.pvp-stats-overview {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.pvp-rank-display {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: rgba(15, 76, 117, 0.2);
+  border: 2px solid #0f4c75;
+  border-radius: 20px;
+  padding: 30px;
+}
+
+.pvp-rank-icon {
+  font-size: 4em;
+  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
+}
+
+.pvp-rank-details h3 {
+  margin: 0;
+  font-size: 2em;
+  text-shadow: 0 0 10px currentColor;
+}
+
+.pvp-rating {
+  font-size: 1.5em;
+  color: #bbe1fa;
+  margin: 5px 0;
+}
+
+.pvp-rank-position {
+  color: #3282b8;
+  font-size: 1.1em;
+}
+
+/* Stats grid */
+.pvp-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+}
+
+.pvp-stat-card {
+  background: rgba(15, 76, 117, 0.1);
+  border: 1px solid #0f4c75;
+  border-radius: 15px;
+  padding: 20px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.pvp-stat-card:hover {
+  background: rgba(15, 76, 117, 0.2);
+  transform: translateY(-2px);
+}
+
+.pvp-stat-card h4 {
+  color: #3282b8;
+  margin: 0 0 10px 0;
+  font-size: 0.9em;
+  text-transform: uppercase;
+}
+
+.pvp-stat-value {
+  font-size: 2em;
+  font-weight: bold;
+  color: #bbe1fa;
+}
+
+.pvp-stat-value.wins {
+  color: #4caf50;
+}
+
+.pvp-stat-value.losses {
+  color: #f44336;
+}
+
+.pvp-stat-subtitle {
+  display: block;
+  font-size: 0.5em;
+  color: #3282b8;
+  margin-top: 5px;
+}
+
+/* Combat stats */
+.pvp-combat-stats {
+  background: rgba(15, 76, 117, 0.1);
+  border: 1px solid #0f4c75;
+  border-radius: 15px;
+  padding: 25px;
+}
+
+.pvp-combat-stats h4 {
+  color: #3282b8;
+  margin: 0 0 20px 0;
+  text-align: center;
+}
+
+.pvp-combat-stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(15, 76, 117, 0.3);
+}
+
+.pvp-combat-stat:last-child {
+  border-bottom: none;
+}
+
+.pvp-combat-stat span {
+  color: #3282b8;
+}
+
+.pvp-combat-stat strong {
+  color: #bbe1fa;
+  font-size: 1.2em;
+}
+
+/* Recent battles */
+.pvp-recent-battles {
+  background: rgba(15, 76, 117, 0.1);
+  border: 1px solid #0f4c75;
+  border-radius: 15px;
+  padding: 25px;
+}
+
+.pvp-recent-battles h3 {
+  color: #3282b8;
+  margin: 0 0 20px 0;
+  text-align: center;
+}
+
+.pvp-no-battles {
+  text-align: center;
+  color: #3282b8;
+  padding: 40px;
+  font-style: italic;
+}
+
+.pvp-battle-history {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pvp-battle-record {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 10px;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.pvp-battle-record:hover {
+  transform: translateX(5px);
+}
+
+.pvp-battle-record.win {
+  border-color: #4caf50;
+}
+
+.pvp-battle-record.loss {
+  border-color: #f44336;
+}
+
+.pvp-battle-result {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.pvp-result-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: white;
+}
+
+.pvp-battle-record.win .pvp-result-icon {
+  background: #4caf50;
+}
+
+.pvp-battle-record.loss .pvp-result-icon {
+  background: #f44336;
+}
+
+.pvp-battle-details {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.pvp-opponent-name {
+  color: #bbe1fa;
+  font-weight: bold;
+  margin: 0;
+}
+
+.pvp-battle-info {
+  color: #3282b8;
+  font-size: 0.9em;
+  margin: 0;
+}
+
+.pvp-battle-rating {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+}
+
+.pvp-rating-change {
+  font-weight: bold;
+  font-size: 1.1em;
+}
+
+.pvp-rating-change.positive {
+  color: #4caf50;
+}
+
+.pvp-rating-change.negative {
+  color: #f44336;
+}
+
+.pvp-battle-time {
+  color: #3282b8;
+  font-size: 0.8em;
+}
+
+/* Footer */
+.pvp-stats-footer {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.pvp-refresh-button {
+  padding: 10px 30px;
+  background: rgba(50, 130, 184, 0.2);
+  color: #3282b8;
+  border: 2px solid #3282b8;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.pvp-refresh-button:hover {
+  background: rgba(50, 130, 184, 0.3);
+  transform: scale(1.05);
+}
+
+/* Mobile styles */
+@media (max-width: 768px) {
+  .pvp-rank-display {
+    flex-direction: column;
+    text-align: center;
+    padding: 20px;
+  }
+  
+  .pvp-rank-icon {
+    font-size: 3em;
+  }
+  
+  .pvp-rank-details h3 {
+    font-size: 1.5em;
+  }
+  
+  .pvp-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .pvp-stat-value {
+    font-size: 1.5em;
+  }
+  
+  .pvp-battle-record {
+    padding: 10px 15px;
+  }
+  
+  .pvp-battle-details {
+    font-size: 0.9em;
+  }
+}
