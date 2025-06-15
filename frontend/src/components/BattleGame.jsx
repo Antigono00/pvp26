@@ -823,6 +823,24 @@ const battleReducer = (state, action) => {
       };
     
     case ACTIONS.APPLY_ONGOING_EFFECTS: {
+      // COMPLETE FIX: Track health changes for animations
+      const creaturesBeforeEffects = new Map();
+      
+      // Store current health for all creatures
+      state.playerField.forEach(creature => {
+        creaturesBeforeEffects.set(creature.id, {
+          health: creature.currentHealth,
+          isEnemy: false
+        });
+      });
+      
+      state.enemyField.forEach(creature => {
+        creaturesBeforeEffects.set(creature.id, {
+          health: creature.currentHealth,
+          isEnemy: true
+        });
+      });
+      
       const processedPlayerField = state.playerField.map(creature => {
         let updatedCreature = { ...creature };
         
@@ -980,10 +998,32 @@ const battleReducer = (state, action) => {
       const updatedEnemyField = action.updatedEnemyField || 
         processedEnemyField.filter(c => c.currentHealth > 0);
       
+      // COMPLETE FIX: Store health change information for animations
+      const healingDamageEvents = [];
+      
+      [...updatedPlayerField, ...updatedEnemyField].forEach((creature, index) => {
+        const beforeData = creaturesBeforeEffects.get(creature.id);
+        
+        if (beforeData && creature.currentHealth !== beforeData.health) {
+          const healthChange = creature.currentHealth - beforeData.health;
+          
+          if (healthChange !== 0) {
+            healingDamageEvents.push({
+              creatureId: creature.id,
+              healthChange: healthChange,
+              isEnemy: beforeData.isEnemy,
+              delay: index * 300
+            });
+          }
+        }
+      });
+      
       return {
         ...state,
         playerField: updatedPlayerField,
-        enemyField: updatedEnemyField
+        enemyField: updatedEnemyField,
+        // Store healing/damage events for animation processing
+        pendingEffectAnimations: healingDamageEvents
       };
     }
     
@@ -3174,6 +3214,9 @@ const BattleGame = ({ onClose }) => {
     console.log("Tool name:", tool.name); // Should be specific name like "Babylon Keystone"
     console.log("Target creature:", targetCreature);
     
+    // COMPLETE FIX: Track health before for proper healing detection
+    const healthBefore = targetCreature.currentHealth;
+    
     // Pass current turn to applyTool
     const result = applyTool(targetCreature, tool, difficulty, turn);
     
@@ -3228,21 +3271,21 @@ const BattleGame = ({ onClose }) => {
       queueStatusEffectAnimation(targetCreature.id, tool.name, isPositive);
     }
     
-    // FIX 2: Add damage number animation for tools
-    // Queue damage number if health changed
-    if (result.toolEffect?.actualHealthChange) {
-      const healthChange = result.toolEffect.actualHealthChange;
-      if (healthChange !== 0) {
-        queueAnimation({
-          type: 'damage-number',
-          targetId: targetCreature.id,
-          amount: Math.abs(healthChange),
-          damageDisplayType: healthChange > 0 ? 'heal' : 'physical',
-          isCritical: false,
-          isBlocked: false,
-          damageType: healthChange > 0 ? 'heal' : 'damage'
-        });
-      }
+    // COMPLETE FIX: Check for immediate healing and queue damage number animation
+    const healthAfter = result.updatedCreature.currentHealth;
+    const immediateHealing = healthAfter - healthBefore;
+    
+    if (immediateHealing !== 0) {
+      queueAnimation({
+        type: 'damage-number',
+        targetId: targetCreature.id,
+        amount: Math.abs(immediateHealing),
+        damageDisplayType: immediateHealing > 0 ? 'heal' : 'physical',
+        isCritical: false,
+        isBlocked: false,
+        damageType: immediateHealing > 0 ? 'heal' : 'damage',
+        delay: 800 // Show after tool animation
+      });
     }
     
   }, [playerField, difficulty, turn, selectedCreature, addToBattleLog, queueAnimation, queueStatusEffectAnimation]);
@@ -3272,6 +3315,10 @@ const BattleGame = ({ onClose }) => {
     
     const effectiveTarget = target || caster;
     console.log(`Caster: ${caster.species_name}, Target: ${effectiveTarget.species_name}`);
+    
+    // COMPLETE FIX: Store health before spell for all creatures
+    const targetHealthBefore = effectiveTarget.currentHealth;
+    const casterHealthBefore = caster.currentHealth;
     
     // Pass current turn to applySpell
     const spellResult = applySpell(caster, effectiveTarget, spell, difficulty, turn);
@@ -3346,20 +3393,63 @@ const BattleGame = ({ onClose }) => {
       spell: spell
     });
     
-    // CRITICAL: Show damage/healing numbers after spell animation
-    if (spellDamage > 0 || spellHealing > 0) {
-      setTimeout(() => {
-        queueAnimation({
+    // COMPLETE FIX: Queue all damage and healing animations
+    const animations = [];
+    
+    // 1. Damage to target (instant or first tick)
+    if (spellDamage > 0) {
+      animations.push({
+        type: 'damage-number',
+        targetId: effectiveTarget.id,
+        amount: spellDamage,
+        damageDisplayType: 'magical',
+        isCritical: spellResult.spellEffect.wasCritical || false,
+        isBlocked: false,
+        damageType: 'normal',
+        delay: 1000 // After spell animation
+      });
+    }
+    
+    // 2. Instant healing to target
+    if (spellResult.updatedTarget) {
+      const targetHealthAfter = spellResult.updatedTarget.currentHealth;
+      const targetHealing = targetHealthAfter - targetHealthBefore;
+      
+      if (targetHealing > 0) {
+        animations.push({
           type: 'damage-number',
           targetId: effectiveTarget.id,
-          amount: spellDamage > 0 ? spellDamage : spellHealing,
+          amount: targetHealing,
           damageDisplayType: 'magical',
-          isCritical: spellResult.spellEffect.wasCritical || false,
+          isCritical: false,
           isBlocked: false,
-          damageType: spellDamage > 0 ? 'normal' : 'heal'
+          damageType: 'heal',
+          delay: 1200
         });
-      }, 500); // Delay to sync with spell impact
+      }
     }
+    
+    // 3. Caster healing from drain effects (only if caster != target)
+    if (spellResult.updatedCaster && caster.id !== effectiveTarget.id) {
+      const casterHealthAfter = spellResult.updatedCaster.currentHealth;
+      const casterHealing = casterHealthAfter - casterHealthBefore;
+      
+      if (casterHealing > 0) {
+        animations.push({
+          type: 'damage-number',
+          targetId: caster.id,
+          amount: casterHealing,
+          damageDisplayType: 'magical',
+          isCritical: false,
+          isBlocked: false,
+          damageType: 'heal',
+          delay: 1400 // After damage shows
+        });
+      }
+    }
+    
+    // Queue all animations
+    animations.forEach(anim => queueAnimation(anim));
     
   }, [playerEnergy, playerField, difficulty, turn, addToBattleLog, queueAnimation]);
   
@@ -4010,6 +4100,9 @@ const BattleGame = ({ onClose }) => {
         
         console.log(`AI using tool: ${aiAction.tool.name} on ${currentToolTarget.species_name}`);
         
+        // COMPLETE FIX: Track health before
+        const toolHealthBefore = currentToolTarget.currentHealth;
+        
         const toolResult = applyTool(currentToolTarget, aiAction.tool, difficulty, turn);
         
         if (toolResult && toolResult.updatedCreature) {
@@ -4047,20 +4140,21 @@ const BattleGame = ({ onClose }) => {
             onComplete: safeCallback
           });
           
-          // Queue damage number if health changed
-          if (toolResult.toolEffect?.actualHealthChange) {
-            const healthChange = toolResult.toolEffect.actualHealthChange;
-            if (healthChange !== 0) {
-              queueAnimation({
-                type: 'damage-number',
-                targetId: aiAction.target.id,
-                amount: Math.abs(healthChange),
-                damageDisplayType: healthChange > 0 ? 'heal' : 'physical',
-                isCritical: false,
-                isBlocked: false,
-                damageType: healthChange > 0 ? 'heal' : 'damage'
-              });
-            }
+          // COMPLETE FIX: Check for immediate healing after tool application
+          const toolHealthAfter = toolResult.updatedCreature.currentHealth;
+          const toolHealing = toolHealthAfter - toolHealthBefore;
+          
+          if (toolHealing !== 0) {
+            queueAnimation({
+              type: 'damage-number',
+              targetId: aiAction.target.id,
+              amount: Math.abs(toolHealing),
+              damageDisplayType: toolHealing > 0 ? 'heal' : 'physical',
+              isCritical: false,
+              isBlocked: false,
+              damageType: toolHealing > 0 ? 'heal' : 'damage',
+              delay: 800
+            });
           }
         } else {
           safeCallback();
@@ -4105,6 +4199,10 @@ const BattleGame = ({ onClose }) => {
         }
         
         console.log(`AI casting spell: ${aiAction.spell.name}`);
+        
+        // COMPLETE FIX: Store health before for all creatures involved
+        const casterHealthBefore = currentCaster.currentHealth;
+        const targetHealthBefore = currentSpellTarget.currentHealth;
         
         const spellResult = applySpell(currentCaster, currentSpellTarget, aiAction.spell, difficulty, turn);
         
@@ -4188,20 +4286,63 @@ const BattleGame = ({ onClose }) => {
             onComplete: safeCallback
           });
           
-          // Show damage/healing numbers
-          if (spellDamage > 0 || spellHealing > 0) {
-            setTimeout(() => {
-              queueAnimation({
-                type: 'damage-number',
-                targetId: aiAction.target.id,
-                amount: spellDamage > 0 ? spellDamage : spellHealing,
-                damageDisplayType: 'magical',  // Changed from duplicate 'type' key
-                isCritical: spellResult.spellEffect.wasCritical || false,
-                isBlocked: false,
-                damageType: spellDamage > 0 ? 'normal' : 'heal'
-              });
-            }, 500);
+          // COMPLETE FIX: Queue all damage and healing numbers
+          const animations = [];
+          
+          // 1. Show damage number if spell dealt damage
+          if (spellDamage > 0) {
+            animations.push({
+              type: 'damage-number',
+              targetId: currentSpellTarget.id,
+              amount: spellDamage,
+              damageDisplayType: 'magical',
+              isCritical: spellResult.spellEffect.wasCritical || false,
+              isBlocked: false,
+              damageType: 'normal',
+              delay: 500
+            });
           }
+          
+          // 2. Check target healing
+          if (spellResult.updatedTarget) {
+            const targetHealthAfter = spellResult.updatedTarget.currentHealth;
+            const targetHealing = targetHealthAfter - targetHealthBefore;
+            
+            if (targetHealing > 0 && spellDamage === 0) { // Don't show healing if damage was shown
+              animations.push({
+                type: 'damage-number',
+                targetId: currentSpellTarget.id,
+                amount: targetHealing,
+                damageDisplayType: 'magical',
+                isCritical: false,
+                isBlocked: false,
+                damageType: 'heal',
+                delay: 500
+              });
+            }
+          }
+          
+          // 3. Check caster healing (for drain spells)
+          if (spellResult.updatedCaster && currentCaster.id !== currentSpellTarget.id) {
+            const casterHealthAfter = spellResult.updatedCaster.currentHealth;
+            const casterHealing = casterHealthAfter - casterHealthBefore;
+            
+            if (casterHealing > 0) {
+              animations.push({
+                type: 'damage-number',
+                targetId: currentCaster.id,
+                amount: casterHealing,
+                damageDisplayType: 'magical',
+                isCritical: false,
+                isBlocked: false,
+                damageType: 'heal',
+                delay: 700 // After damage
+              });
+            }
+          }
+          
+          // Queue all animations
+          animations.forEach(anim => queueAnimation(anim));
         } else {
           console.log("AI spell cast failed");
           safeCallback();
@@ -4852,6 +4993,38 @@ const BattleGame = ({ onClose }) => {
       dispatch({ type: ACTIONS.UPDATE_ALL_CREATURES, lastRegenAmounts: null });
     }
   }, [state.lastRegenAmounts, activePlayer, addToBattleLog, queueAnimation, queueEnergyRegenAnimation]);
+  
+  // COMPLETE FIX: Process pending effect animations
+  useEffect(() => {
+    if (state.pendingEffectAnimations && state.pendingEffectAnimations.length > 0) {
+      const processAnimations = async () => {
+        for (const event of state.pendingEffectAnimations) {
+          await new Promise(resolve => setTimeout(resolve, event.delay));
+          
+          const targetElement = await getCreatureElementWithRetry(event.creatureId, event.isEnemy);
+          
+          if (targetElement && event.healthChange !== 0) {
+            showDamageNumber(
+              targetElement,
+              Math.abs(event.healthChange),
+              'magical',
+              false, // Not critical
+              false, // Not blocked
+              event.healthChange > 0 ? 'heal' : 'dot' // damage over time
+            );
+          }
+        }
+      };
+      
+      processAnimations();
+      
+      // Clear pending animations
+      dispatch({ 
+        type: ACTIONS.UPDATE_ALL_CREATURES, 
+        pendingEffectAnimations: [] 
+      });
+    }
+  }, [state.pendingEffectAnimations]);
   
   // Data attributes for creature DOM elements
   const creatureDataAttributes = useCallback((creature, isEnemy) => {
