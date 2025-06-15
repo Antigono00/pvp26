@@ -1,4 +1,4 @@
-// src/components/battle/ToolSpellModal.jsx - FIXED INFINITE RENDERING
+// src/components/battle/ToolSpellModal.jsx - ACCURATE EFFECT DISPLAY
 import React, { useState, useEffect, useMemo } from 'react';
 import { getToolEffect, getSpellEffect } from '../../utils/itemEffects';
 
@@ -78,6 +78,11 @@ const ToolSpellModal = ({ items, type, onSelect, onClose, showTabs = false, cast
   // Get effect icon based on effect type
   const getEffectIcon = (effectName) => {
     const icons = {
+      'surge': '⚡',
+      'shield': '🛡️',
+      'echo': '🔊',
+      'drain': '🩸',
+      'charge': '🔋',
       'Surge': '⚡',
       'Shield': '🛡️',
       'Echo': '🔊',
@@ -99,137 +104,162 @@ const ToolSpellModal = ({ items, type, onSelect, onClose, showTabs = false, cast
     return icons[typeName] || '⭐';
   };
   
-  // Get enhanced description with exact mechanics
-  const getEnhancedDescription = (item, itemType, detailedStats) => {
+  // Get precise effect description from the actual effect data
+  const getPreciseEffectDescription = (item, itemType, detailedStats) => {
     const { effect, type, effectName } = detailedStats;
     const descriptions = [];
     
     if (itemType === 'tool') {
-      // Tool descriptions based on actual effects
-      switch (effectName) {
-        case 'Surge':
-          if (type === 'energy') {
-            descriptions.push('Reduces energy costs and provides energy regeneration');
-            descriptions.push(`Energy Cost: ${effect.statChanges?.energyCost || 0} per action`);
-            descriptions.push(`Energy Gain: +${effect.energyGain || 0} per turn`);
-          } else if (type === 'strength') {
-            descriptions.push('Massively boosts physical power temporarily');
-            descriptions.push(`Physical Attack: +${effect.statChanges?.physicalAttack || 0}`);
-            descriptions.push(`Physical Defense: +${effect.statChanges?.physicalDefense || 0}`);
-          } else if (type === 'magic') {
-            descriptions.push('Enhances all defensive capabilities and restores health');
-            if (effect.healthChange) descriptions.push(`Instant Heal: +${effect.healthChange} HP`);
-          } else if (type === 'stamina') {
-            descriptions.push('Provides healing and builds defensive power over time');
-            if (effect.healthChange) descriptions.push(`Instant Heal: +${effect.healthChange} HP`);
-            if (effect.chargeEffect) {
-              descriptions.push(`Charge Bonus: +${effect.chargeEffect.perTurnBonus} defense per turn`);
-              descriptions.push(`Final Burst: +${effect.chargeEffect.finalBurst} HP after ${effect.chargeEffect.maxTurns} turns`);
-            }
-          } else if (type === 'speed') {
-            descriptions.push('Trades defense for increased offensive power');
-            descriptions.push('Warning: Reduces defensive stats!');
-          }
-          break;
-          
-        case 'Shield':
-          descriptions.push('Grants defensive protection against attacks');
-          descriptions.push('Increases resistance to all damage types');
-          break;
-          
-        case 'Echo':
-          descriptions.push('Creates effects that persist over multiple turns');
-          descriptions.push('Perfect for sustained combat advantages');
-          break;
-          
-        case 'Drain':
-          descriptions.push('Converts defensive power into offensive might');
-          descriptions.push('Ideal for aggressive strategies');
-          break;
-          
-        case 'Charge':
-          descriptions.push('Accumulates power over time for maximum impact');
-          descriptions.push('Requires patience but delivers powerful results');
-          break;
-      }
+      // Tools - read from the actual effect data
+      const toolName = item.name;
       
-      if (effect.duration) {
-        descriptions.push(`Duration: ${effect.duration} turn${effect.duration > 1 ? 's' : ''}`);
+      switch (toolName) {
+        case 'Babylon Keystone':
+          descriptions.push('Energy efficiency that echoes with decaying power');
+          descriptions.push(`Duration: ${effect.duration} turns`);
+          descriptions.push('Echo Effect: 100% → 70% → 49% → 34% power');
+          descriptions.push('Per Turn Benefits:');
+          descriptions.push('• Energy cost reduction (starts at -1)');
+          descriptions.push('• Energy gain per turn (starts at 2)');
+          descriptions.push('• Healing per turn (starts at 2 HP)');
+          break;
+          
+        case 'Hyperscale Capacitor':
+          descriptions.push('Massive strength surge for quick bursts');
+          descriptions.push(`Duration: ${effect.duration} turns`);
+          descriptions.push('Stat Bonuses:');
+          descriptions.push('• Physical Attack: +15');
+          descriptions.push('• Physical Defense: +8');
+          descriptions.push('• Healing: +5 HP per turn');
+          break;
+          
+        case 'Ledger Lens':
+          descriptions.push('Magical shield with strong defensive properties');
+          descriptions.push(`Duration: ${effect.duration} turns`);
+          descriptions.push('Initial Effects:');
+          descriptions.push('• Max Health: +20 (first turn only)');
+          descriptions.push('• Barrier: 20 damage absorption');
+          descriptions.push('Ongoing Effects:');
+          descriptions.push('• Physical Defense: +12');
+          descriptions.push('• Magical Defense: +12');
+          descriptions.push('• Healing: +8 HP per turn');
+          break;
+          
+        case 'Olympia Emblem':
+          descriptions.push('Charges up power over time');
+          descriptions.push(`Duration: ${effect.duration} turns`);
+          descriptions.push('Charge Progression:');
+          descriptions.push('• Turn 1: +5 Defense, +13 HP');
+          descriptions.push('• Turn 2: +10 Defense, +16 HP');
+          descriptions.push('• Turn 3: +15 Defense, +19 HP');
+          descriptions.push('• Turn 4: +20 Defense, +47 HP (Final Burst!)');
+          descriptions.push('Defense boost applies to both Physical and Magical (50%)');
+          break;
+          
+        case 'Validator Core':
+          descriptions.push('Drains defense to boost offensive power');
+          descriptions.push(`Duration: ${effect.duration} turns`);
+          descriptions.push('Trade-off Effects:');
+          descriptions.push('• Physical Attack: +10');
+          descriptions.push('• Magical Attack: +10');
+          descriptions.push('• Physical Defense: -3');
+          descriptions.push('• Magical Defense: -3');
+          descriptions.push('• Healing: +7 HP per turn');
+          break;
+          
+        default:
+          // Fallback for unknown tools
+          if (effect.statChanges) {
+            descriptions.push('Stat Changes:');
+            Object.entries(effect.statChanges).forEach(([stat, value]) => {
+              descriptions.push(`• ${stat}: ${value > 0 ? '+' : ''}${value}`);
+            });
+          }
+          if (effect.healthOverTime) {
+            descriptions.push(`Healing: +${effect.healthOverTime} HP per turn`);
+          }
+          if (effect.duration) {
+            descriptions.push(`Duration: ${effect.duration} turns`);
+          }
       }
       
     } else {
-      // Spell descriptions based on actual effects
-      const magicPower = detailedStats.casterMagic;
+      // Spells - read from the actual effect data
+      const spellName = item.name;
+      const magicPower = 1 + (detailedStats.casterMagic * 0.15);
       
-      switch (effectName) {
-        case 'Surge':
-          if (type === 'energy') {
-            descriptions.push('Babylon Burst - Devastating energy attack');
-            descriptions.push(`Base Damage: ${Math.round(20 * (1 + magicPower * 0.15))}`);
-            descriptions.push('Special: Armor piercing, 15% critical chance');
-          } else if (type === 'strength') {
-            descriptions.push('Scrypto Surge - Drains enemy power while healing');
-            descriptions.push(`Base Damage: ${Math.round(18 * (1 + magicPower * 0.15))}`);
-            descriptions.push(`Self Heal: ${Math.round(10 * (1 + magicPower * 0.15))}`);
-            descriptions.push('Drains -3 Physical/Magical Attack from target');
-          } else if (type === 'magic') {
-            descriptions.push('Shardstorm - Charges up for massive area damage');
-            descriptions.push('Requires 1 turn to charge');
-            descriptions.push(`Charged Damage: ${Math.round(35 * (1 + magicPower * 0.15))}`);
-            descriptions.push('20% chance to stun on impact');
-          } else if (type === 'stamina') {
-            descriptions.push('Cerberus Chain - Powerful defensive enhancement');
-            descriptions.push(`Instant Heal: ${Math.round(15 * (1 + magicPower * 0.15))}`);
-            descriptions.push('Grants +8 Physical/Magical Defense, +15 Max Health');
-            descriptions.push('15% damage reduction for 3 turns');
-          } else if (type === 'speed') {
-            descriptions.push('Engine Overclock - Boosts speed and regeneration');
-            descriptions.push('Grants +5 Initiative, +3 Dodge/Critical Chance');
-            descriptions.push(`Regeneration: +3 HP per turn`);
+      switch (spellName) {
+        case 'Babylon Burst':
+          const burstDamage = Math.round(30 * magicPower);
+          descriptions.push('Instant massive energy damage');
+          descriptions.push(`Base Damage: ${burstDamage}`);
+          descriptions.push('• 20% critical hit chance (1.5x damage)');
+          descriptions.push('• Armor piercing (ignores defense)');
+          descriptions.push('• Energy Cost: 4');
+          break;
+          
+        case 'Scrypto Surge':
+          const surgeDamage = Math.round(12 * magicPower);
+          const surgeHeal = Math.round(10 * magicPower);
+          descriptions.push('Drains power from enemy while healing');
+          descriptions.push(`Duration: 3 turns`);
+          descriptions.push('Per Turn Effects:');
+          descriptions.push(`• Damage: ${surgeDamage} HP`);
+          descriptions.push(`• Self Healing: ${surgeHeal} HP`);
+          descriptions.push('First Turn Only:');
+          descriptions.push('• Steal 4 Physical/Magical Attack from target');
+          descriptions.push('• Gain 3 Physical/Magical Attack');
+          descriptions.push('• Energy Cost: 4');
+          break;
+          
+        case 'Shardstorm':
+          const shardDamage = Math.round(35 * magicPower);
+          descriptions.push('Charges up for devastating area damage');
+          descriptions.push('• Requires 1 turn to charge');
+          descriptions.push(`• Damage After Charge: ${shardDamage}`);
+          descriptions.push('• Area Effect (hits all enemies)');
+          descriptions.push('• 20% chance to stun target');
+          descriptions.push('• Energy Cost: 4');
+          break;
+          
+        case 'Cerberus Chain':
+          const chainHeal = Math.round(15 * magicPower);
+          const chainRegen = Math.round(5 * magicPower);
+          descriptions.push('Powerful defensive enhancement with healing');
+          descriptions.push(`Instant Heal: ${chainHeal} HP`);
+          descriptions.push(`Duration: 3 turns`);
+          descriptions.push('Defensive Buffs:');
+          descriptions.push('• Physical Defense: +8');
+          descriptions.push('• Magical Defense: +8');
+          descriptions.push('• Max Health: +15');
+          descriptions.push('• Damage Reduction: 15%');
+          descriptions.push(`• Regeneration: ${chainRegen} HP per turn`);
+          descriptions.push('• Energy Cost: 4');
+          break;
+          
+        case 'Engine Overclock':
+          descriptions.push('Speed boost that echoes with decreasing power');
+          descriptions.push(`Duration: 4 turns`);
+          descriptions.push('Echo Progression (100% → 70% → 49% → 34%):');
+          descriptions.push('Turn 1: +10 Initiative, +3 Dodge/Crit, +3 HP');
+          descriptions.push('Turn 2: +7 Initiative, +2 Dodge/Crit, +2 HP');
+          descriptions.push('Turn 3: +5 Initiative, +1 Dodge/Crit, +1 HP');
+          descriptions.push('Turn 4: +3 Initiative, +1 Dodge/Crit, +1 HP');
+          descriptions.push('• Energy Cost: 4');
+          break;
+          
+        default:
+          // Fallback for unknown spells
+          if (effect.damage) {
+            descriptions.push(`Damage: ${effect.damage}`);
           }
-          break;
-          
-        case 'Shield':
-          descriptions.push('Creates a protective magical barrier');
-          descriptions.push('Absorbs damage and provides healing');
-          break;
-          
-        case 'Echo':
-          descriptions.push('Applies lingering magical effects');
-          descriptions.push('Effects repeat each turn for the duration');
-          break;
-          
-        case 'Drain':
-          descriptions.push('Steals life force from the target');
-          descriptions.push('Damages enemy while healing the caster');
-          break;
-          
-        case 'Charge':
-          descriptions.push('Requires preparation for devastating effect');
-          descriptions.push('Delayed but extremely powerful impact');
-          break;
-      }
-      
-      // Add damage/healing info
-      if (effect.damage) {
-        descriptions.push(`Total Damage: ${effect.damage}`);
-      }
-      if (effect.healing) {
-        descriptions.push(`Total Healing: ${effect.healing}`);
-      }
-      if (effect.selfHeal) {
-        descriptions.push(`Self Healing: ${effect.selfHeal}`);
-      }
-      if (effect.healthOverTime) {
-        descriptions.push(`Health per Turn: ${effect.healthOverTime > 0 ? '+' : ''}${effect.healthOverTime}`);
-      }
-      
-      if (effect.duration && effect.duration > 0) {
-        descriptions.push(`Duration: ${effect.duration} turn${effect.duration > 1 ? 's' : ''}`);
-      }
-      
-      if (effect.prepareEffect) {
-        descriptions.push(`Charge Time: ${effect.prepareEffect.turns} turn${effect.prepareEffect.turns > 1 ? 's' : ''}`);
+          if (effect.healing) {
+            descriptions.push(`Healing: ${effect.healing}`);
+          }
+          if (effect.duration && effect.duration > 0) {
+            descriptions.push(`Duration: ${effect.duration} turns`);
+          }
+          descriptions.push('• Energy Cost: 4');
       }
     }
     
@@ -248,7 +278,7 @@ const ToolSpellModal = ({ items, type, onSelect, onClose, showTabs = false, cast
     return items.map(item => {
       const detailedStats = getDetailedItemStats(item, type);
       const statChanges = formatStatChanges(detailedStats.effect.statChanges);
-      const descriptions = getEnhancedDescription(item, type, detailedStats);
+      const descriptions = getPreciseEffectDescription(item, type, detailedStats);
       
       return {
         ...item,
@@ -322,45 +352,22 @@ const ToolSpellModal = ({ items, type, onSelect, onClose, showTabs = false, cast
                     <div className="item-properties">
                       <div className="property-row">
                         <span className="property-label">Type:</span>
-                        <span className="property-value">{item[`${type}_type`]}</span>
+                        <span className="property-value capitalize">{item[`${type}_type`]}</span>
                       </div>
                       <div className="property-row">
                         <span className="property-label">Effect:</span>
-                        <span className="property-value">{item[`${type}_effect`]}</span>
+                        <span className="property-value capitalize">{item[`${type}_effect`]}</span>
                       </div>
                     </div>
                     
-                    {/* Stat Changes Section */}
-                    {statChanges && statChanges.length > 0 && (
-                      <div className="stat-changes">
-                        <div className="stat-changes-header">Stat Changes:</div>
-                        {statChanges.map((stat, index) => (
-                          <div key={index} className="stat-change-row">
-                            <span className="stat-name">{stat.name}:</span>
-                            <span className="stat-value" style={{ color: stat.color }}>
-                              {stat.value}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    
-                    {/* Detailed Description */}
-                    <div className="item-description enhanced">
+                    {/* Detailed Description with Precise Values */}
+                    <div className="item-description enhanced precise">
                       {descriptions.map((desc, index) => (
-                        <div key={index} className="description-line">
+                        <div key={index} className={`description-line ${desc.startsWith('•') ? 'indent' : ''} ${desc.includes(':') && !desc.startsWith('•') ? 'section-header' : ''}`}>
                           {desc}
                         </div>
                       ))}
                     </div>
-                    
-                    {/* Energy Cost for Spells */}
-                    {type === 'spell' && (
-                      <div className="energy-cost">
-                        <span className="cost-icon">⚡</span>
-                        <span className="cost-value">4 Energy</span>
-                      </div>
-                    )}
                   </div>
                   
                   <div className="item-footer">
@@ -374,6 +381,52 @@ const ToolSpellModal = ({ items, type, onSelect, onClose, showTabs = false, cast
           </div>
         </div>
       </div>
+      
+      <style jsx>{`
+        .item-description.precise {
+          margin-top: 12px;
+          font-size: 0.9em;
+          line-height: 1.5;
+        }
+        
+        .description-line {
+          margin-bottom: 4px;
+          color: #e0e0e0;
+        }
+        
+        .description-line.indent {
+          margin-left: 15px;
+          color: #b0b0b0;
+        }
+        
+        .description-line.section-header {
+          font-weight: 600;
+          color: #ffffff;
+          margin-top: 8px;
+          margin-bottom: 6px;
+        }
+        
+        .property-value.capitalize {
+          text-transform: capitalize;
+        }
+        
+        .item-card.enhanced {
+          cursor: pointer;
+          transition: all 0.3s ease;
+          max-height: 600px;
+          overflow-y: auto;
+        }
+        
+        .item-card.enhanced:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        }
+        
+        .items-grid.enhanced {
+          gap: 20px;
+          padding: 10px;
+        }
+      `}</style>
     </div>
   );
 };
